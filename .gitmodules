@@ -1,0 +1,6 @@
+[submodule "sw/driver/open-nic-driver"]
+	path = sw/driver/open-nic-driver
+	url = https://github.com/Xilinx/open-nic-driver.git
+[submodule "hw/lib/xilinx/xilinx_shell_v1_0_0/open-nic-shell"]
+	path = hw/lib/xilinx/xilinx_shell_v1_0_0/open-nic-shell
+	url = https://github.com/Xilinx/open-nic-shell.git

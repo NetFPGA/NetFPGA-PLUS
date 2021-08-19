@@ -24,9 +24,3 @@ foreach cmac_clk [get_clocks -of_object [get_nets u_top_wrapper/cmac_clk*]] {
     set_max_delay -datapath_only -from $axis_aclk -to $cmac_clk 4.000
     set_max_delay -datapath_only -from $cmac_clk -to $axis_aclk 3.103
 }
-
-create_pblock pblock_nf_datapath
-add_cells_to_pblock [get_pblocks pblock_nf_datapath] [get_cells -quiet [list nf_datapath_0]]
-#add_cells_to_pblock [get_pblocks pblock_nf_datapath] [get_cells -quiet [list u_top_wrapper/u_nf_attachment]]
-resize_pblock [get_pblocks pblock_nf_datapath] -add {SLR2}
-

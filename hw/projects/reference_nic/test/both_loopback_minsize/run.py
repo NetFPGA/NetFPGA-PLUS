@@ -67,7 +67,8 @@ pkts = []
 
 print("Sending now: ")
 totalPktLengths = [0,0]
-simReg.regDelay(3000)
+if not isHW():
+    simReg.regDelay(3000)
 nftest_barrier()
 
 # send NUM_PKTS from ports nf2c0...nf2c3

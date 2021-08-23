@@ -89,10 +89,10 @@ for i in range(NUM_PKTS):
 if not isHW():
     nftest_send_phy('nf0', pkts) 
     nftest_expect_dma('nf0', pkts) 
+    simReg.regDelay(3000)
 
 print("")
 
-simReg.regDelay(3000)
 nftest_barrier()
 if isHW():
     rres1=nftest_regread_expect(NFPLUS_INPUT_ARBITER_0_PKTIN(), 0x14)

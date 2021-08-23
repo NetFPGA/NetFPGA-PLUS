@@ -42,7 +42,6 @@ set_clock_groups -asynchronous -group [get_clocks SYSCLK0_300 -include_generated
 #######################################################################
 set_property PACKAGE_PIN AM10 [get_ports pci_clk_n]
 set_property PACKAGE_PIN AM11 [get_ports pci_clk_p]
-create_clock -name sys_clk -period 10 [get_ports pci_clk_p]
 
 set_property PULLUP true [get_ports pci_rst_n]
 set_property IOSTANDARD LVCMOS12 [get_ports pci_rst_n]

@@ -387,7 +387,8 @@ module output_port_lookup
          );
 
    dest_ip_filter
-     dest_ip_filter
+     #(.C_S_AXIS_DATA_WIDTH (C_S_AXIS_DATA_WIDTH)
+     ) dest_ip_filter
        ( // --- Interface to the previous stage
          .tdata                    (s_axis_tdata),
 

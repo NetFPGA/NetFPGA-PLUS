@@ -15,8 +15,6 @@
 # limitations under the License.
 #
 # *************************************************************************
-create_clock -period 10.000 -name pcie_refclk [get_ports pci_clk_p]
-
 set_false_path -through [get_ports pci_rst_n]
 
 set axis_aclk [get_clocks -of_object [get_nets u_top_wrapper/axis_aclk]]

@@ -30,7 +30,7 @@
 set design        axis_sim_record
 set device        $::env(DEVICE)
 set proj_dir      ./ip_proj
-set ip_version    1.00
+set ip_version    1.0
 set lib_name      NetFPGA
 
 # Project setting.

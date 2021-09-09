@@ -35,7 +35,7 @@ set design input_arbiter
 set top input_arbiter
 set device $::env(DEVICE)
 set proj_dir ./ip_proj
-set ip_version 1.00
+set ip_version 1.0
 set lib_name NetFPGA
 #####################################
 # Project Settings
@@ -67,8 +67,8 @@ set_property display_name ${design} [ipx::current_core]
 set_property description ${design} [ipx::current_core]
 
 update_ip_catalog -rebuild 
-ipx::add_subcore NetFPGA:NetFPGA:fallthrough_small_fifo:1.00 [ipx::get_file_groups xilinx_anylanguagesynthesis -of_objects [ipx::current_core]]
-ipx::add_subcore NetFPGA:NetFPGA:fallthrough_small_fifo:1.00 [ipx::get_file_groups xilinx_anylanguagebehavioralsimulation -of_objects [ipx::current_core]]
+ipx::add_subcore NetFPGA:NetFPGA:fallthrough_small_fifo:1.0 [ipx::get_file_groups xilinx_anylanguagesynthesis -of_objects [ipx::current_core]]
+ipx::add_subcore NetFPGA:NetFPGA:fallthrough_small_fifo:1.0 [ipx::get_file_groups xilinx_anylanguagebehavioralsimulation -of_objects [ipx::current_core]]
 ipx::infer_user_parameters [ipx::current_core]
 
 ipx::add_user_parameter {C_M_AXIS_DATA_WIDTH} [ipx::current_core]

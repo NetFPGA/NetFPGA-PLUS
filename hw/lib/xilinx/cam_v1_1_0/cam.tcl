@@ -28,7 +28,7 @@
 
 # Set variables
 set   lib_name       xilinx
-set   ip_version     1.10
+set   ip_version     1.1
 set   design         cam
 
 set device $::env(DEVICE)

@@ -33,7 +33,7 @@ set design nf_endianess_manager
 set top nf_endianess_manager
 set device $::env(DEVICE)
 set proj_dir ./ip_proj
-set ip_version 1.00
+set ip_version 1.0
 set lib_name NetFPGA
 #####################################
 # set IP paths

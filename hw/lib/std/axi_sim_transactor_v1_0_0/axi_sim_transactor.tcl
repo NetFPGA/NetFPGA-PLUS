@@ -31,7 +31,7 @@
 set design        axi_sim_transactor
 set device        $::env(DEVICE)
 set proj_dir      ./ip_proj
-set ip_version    1.00
+set ip_version    1.0
 set lib_name      NetFPGA
 
 set axis_sim_pkg_path ../axis_sim_pkg_v1_0_0/hdl/

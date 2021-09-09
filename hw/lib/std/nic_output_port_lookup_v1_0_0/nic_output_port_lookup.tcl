@@ -35,7 +35,7 @@ set design nic_output_port_lookup
 set top nic_output_port_lookup
 set device $::env(DEVICE)
 set proj_dir ./synth
-set ip_version 1.00
+set ip_version 1.0
 set lib_name NetFPGA
 #####################################
 # set IP paths
@@ -125,8 +125,8 @@ set_property display_name {C_BASEADDR} [ipx::get_user_parameters C_BASEADDR]
 set_property value {0x00000000} [ipx::get_user_parameters C_BASEADDR]
 set_property value_format {bitstring} [ipx::get_user_parameters C_BASEADDR]
 
-ipx::add_subcore NetFPGA:NetFPGA:fallthrough_small_fifo:1.00 [ipx::get_file_groups xilinx_anylanguagesynthesis -of_objects [ipx::current_core]]
-ipx::add_subcore NetFPGA:NetFPGA:fallthrough_small_fifo:1.00 [ipx::get_file_groups xilinx_anylanguagebehavioralsimulation -of_objects [ipx::current_core]]
+ipx::add_subcore NetFPGA:NetFPGA:fallthrough_small_fifo:1.0 [ipx::get_file_groups xilinx_anylanguagesynthesis -of_objects [ipx::current_core]]
+ipx::add_subcore NetFPGA:NetFPGA:fallthrough_small_fifo:1.0 [ipx::get_file_groups xilinx_anylanguagebehavioralsimulation -of_objects [ipx::current_core]]
 
 ipx::add_bus_parameter FREQ_HZ [ipx::get_bus_interfaces m_axis -of_objects [ipx::current_core]]
 ipx::add_bus_parameter FREQ_HZ [ipx::get_bus_interfaces s_axis -of_objects [ipx::current_core]]

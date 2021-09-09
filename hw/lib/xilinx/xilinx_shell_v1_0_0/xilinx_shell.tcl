@@ -31,7 +31,7 @@ set device $::env(DEVICE)
 set board $::env(BOARD)
 set board_name $::env(BOARD_NAME)
 set proj_dir ./ip_proj
-set ip_version 1.00
+set ip_version 1.0
 set lib_name xilinx
 set proj ./proj
 #####################################

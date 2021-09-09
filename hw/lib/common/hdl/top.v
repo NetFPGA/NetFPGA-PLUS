@@ -153,12 +153,26 @@ module top #(
     end
   end
 
-  wire axis_aclk, axil_aclk;
-  wire axis_rst, axil_rst;
+  reg [9:0] core_rst_cnt = 10'd0;
+  reg core_rst_reg;
+  always @ (posedge core_clk) begin
+    if (core_rst_cnt != 10'h3ff) begin
+      core_rst_cnt <= core_rst_cnt + 10'd1;
+      core_rst_reg <= 1'b1;
+    end
+    else begin
+      core_rst_reg <= 1'b0;
+    end
+  end
+  wire   core_rst  = core_rst_reg;
+
+  wire axis_aclk, axil_aclk, axil_aclk_buf;
+  wire axis_rst, axil_rst, axil_rst_buf;
 
   wire core_clk;
   wire locked;
-  wire core_rst = ~locked;
+  assign axil_aclk = core_clk;
+  assign axil_rst = core_rst;
 
   clk_wiz_1 u_clk_wiz_1 (
     .clk_out1(core_clk),
@@ -195,6 +209,36 @@ module top #(
   wire        m_axil_rvalid;
   wire        m_axil_rready;
   wire [1:0]  m_axil_bresp;
+
+
+  //-- AXI Master Write Address Channel
+  wire [31:0] s_axil_awaddr;
+  wire [2:0]  s_axil_awprot;
+  wire        s_axil_awvalid;
+  wire        s_axil_awready;
+
+  //-- AXI Master Write Data Channel
+  wire [31:0] s_axil_wdata;
+  wire  [3:0] s_axil_wstrb;
+  wire        s_axil_wvalid;
+  wire        s_axil_wready;
+
+  //-- AXI Master Write Response Channel
+  wire        s_axil_bvalid;
+  wire        s_axil_bready;
+
+  //-- AXI Master Read Address Channel
+  wire [31:0] s_axil_araddr;
+  wire [2:0]  s_axil_arprot;
+  wire        s_axil_arvalid;
+  wire        s_axil_arready;
+
+  //-- AXI Master Read Data Channel
+  wire [31:0] s_axil_rdata;
+  wire [1:0]  s_axil_rresp;
+  wire        s_axil_rvalid;
+  wire        s_axil_rready;
+  wire [1:0]  s_axil_bresp;
 
   wire  [NF_C_S_AXI_ADDR_WIDTH-1 : 0]   S2_AXI_AWADDR , S1_AXI_AWADDR , S0_AXI_AWADDR;
   wire                                  S2_AXI_AWVALID, S1_AXI_AWVALID, S0_AXI_AWVALID;
@@ -369,28 +413,73 @@ module top #(
 `endif /* __BOARD_AU50__ */
   );
 
-  axi_crossbar_0 u_interconnect (
-    .aclk          (axil_aclk),
-    .aresetn       (!axil_rst),
-    .s_axi_awaddr  (m_axil_awaddr ),
-    .s_axi_awprot  (),
+  axi_clock_converter_0 u_clk_conv (
+    .s_axi_aclk    (axil_aclk_buf),
+    .s_axi_aresetn (!axil_rst_buf),
+    .s_axi_awaddr  (m_axil_awaddr),
+    .s_axi_awprot  (0),
     .s_axi_awvalid (m_axil_awvalid),
     .s_axi_awready (m_axil_awready),
     .s_axi_wdata   (m_axil_wdata  ),
     .s_axi_wstrb   (4'b1111),
-    .s_axi_wvalid  (m_axil_wvalid ),
-    .s_axi_wready  (m_axil_wready ),
-    .s_axi_bresp   (m_axil_bresp  ),
-    .s_axi_bvalid  (m_axil_bvalid ),
-    .s_axi_bready  (m_axil_bready ),
+    .s_axi_wvalid  (m_axil_wvalid),
+    .s_axi_wready  (m_axil_wready),
+    .s_axi_bresp   (m_axil_bresp ),
+    .s_axi_bvalid  (m_axil_bvalid),
+    .s_axi_bready  (m_axil_bready),
     .s_axi_araddr  (m_axil_araddr),
+    .s_axi_arprot  (0),
+    .s_axi_arvalid (m_axil_arvalid),
+    .s_axi_arready (m_axil_arready),
+    .s_axi_rdata   (m_axil_rdata  ),
+    .s_axi_rresp   (m_axil_rresp  ),
+    .s_axi_rvalid  (m_axil_rvalid ),
+    .s_axi_rready  (m_axil_rready ),
+    .m_axi_aclk    (axil_aclk),
+    .m_axi_aresetn (!axil_rst),
+    .m_axi_awaddr  (s_axil_awaddr),
+    .m_axi_awprot  (),
+    .m_axi_awvalid (s_axil_awvalid),
+    .m_axi_awready (s_axil_awready),
+    .m_axi_wdata   (s_axil_wdata),
+    .m_axi_wstrb   (s_axil_wstrb),
+    .m_axi_wvalid  (s_axil_wvalid),
+    .m_axi_wready  (s_axil_wready),
+    .m_axi_bresp   (s_axil_bresp ),
+    .m_axi_bvalid  (s_axil_bvalid),
+    .m_axi_bready  (s_axil_bready),
+    .m_axi_araddr  (s_axil_araddr),
+    .m_axi_arprot  (),
+    .m_axi_arvalid (s_axil_arvalid),
+    .m_axi_arready (s_axil_arready),
+    .m_axi_rdata   (s_axil_rdata  ),
+    .m_axi_rresp   (s_axil_rresp  ),
+    .m_axi_rvalid  (s_axil_rvalid ),
+    .m_axi_rready  (s_axil_rready )
+  );
+
+  axi_crossbar_0 u_interconnect (
+    .aclk          (axil_aclk),
+    .aresetn       (!axil_rst),
+    .s_axi_awaddr  (s_axil_awaddr ),
+    .s_axi_awprot  (),
+    .s_axi_awvalid (s_axil_awvalid),
+    .s_axi_awready (s_axil_awready),
+    .s_axi_wdata   (s_axil_wdata  ),
+    .s_axi_wstrb   (s_axil_wstrb),
+    .s_axi_wvalid  (s_axil_wvalid ),
+    .s_axi_wready  (s_axil_wready ),
+    .s_axi_bresp   (s_axil_bresp  ),
+    .s_axi_bvalid  (s_axil_bvalid ),
+    .s_axi_bready  (s_axil_bready ),
+    .s_axi_araddr  (s_axil_araddr),
     .s_axi_arprot  (),
-    .s_axi_arvalid (m_axil_arvalid ),
-    .s_axi_arready (m_axil_arready ),
-    .s_axi_rdata   (m_axil_rdata   ),
-    .s_axi_rresp   (m_axil_rresp   ),
-    .s_axi_rvalid  (m_axil_rvalid  ),
-    .s_axi_rready  (m_axil_rready  ),
+    .s_axi_arvalid (s_axil_arvalid ),
+    .s_axi_arready (s_axil_arready ),
+    .s_axi_rdata   (s_axil_rdata   ),
+    .s_axi_rresp   (s_axil_rresp   ),
+    .s_axi_rvalid  (s_axil_rvalid  ),
+    .s_axi_rready  (s_axil_rready  ),
     .m_axi_awaddr  ({S2_AXI_AWADDR ,S1_AXI_AWADDR ,S0_AXI_AWADDR }),
     .m_axi_awprot  (),
     .m_axi_awvalid ({S2_AXI_AWVALID,S1_AXI_AWVALID,S0_AXI_AWVALID}),
@@ -504,10 +593,11 @@ module top #(
     .axis_i_1_tlast    (axis_i_1_tlast ),
 
     .core_clk           (core_clk),
+    .core_rst           (core_rst),
     .axis_aclk          (axis_aclk),
-    .axil_aclk          (axil_aclk),
+    .axil_aclk          (axil_aclk_buf),
     .axis_rst           (axis_rst),
-    .axil_rst           (axil_rst)
+    .axil_rst           (axil_rst_buf)
   );
 
 endmodule 

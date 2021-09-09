@@ -117,6 +117,7 @@ module top_wrapper #(
 	output                           axis_i_1_tlast, 
 
 	input                         core_clk,
+	input                         core_rst,
 	output                        axis_aclk,
 	output                        axil_aclk,
 	output                        axis_rst,
@@ -172,6 +173,24 @@ module top_wrapper #(
   wire              [31:0] m0_axil_rdata;
   wire               [1:0] m0_axil_rresp;
   wire                     m0_axil_rready;
+
+  wire                     s_axil_awvalid;
+  wire              [31:0] s_axil_awaddr;
+  wire                     s_axil_awready;
+  wire                     s_axil_wvalid;
+  wire              [31:0] s_axil_wdata;
+  wire                     s_axil_wready;
+  wire                     s_axil_bvalid;
+  wire               [1:0] s_axil_bresp;
+  wire                     s_axil_bready;
+  wire                     s_axil_arvalid;
+  wire              [31:0] s_axil_araddr;
+  wire                     s_axil_arready;
+  wire                     s_axil_rvalid;
+  wire              [31:0] s_axil_rdata;
+  wire               [1:0] s_axil_rresp;
+  wire                     s_axil_rready;
+  wire               [3:0] s_axil_wstrb;
 
   wire [31:0] user_rst_done = 32'hffff_fffe;
 
@@ -294,29 +313,74 @@ module top_wrapper #(
     //.m_axis_qdma_h2c_1_tdest  (m_axis_qdma_h2c_1_tdest ),
     .m_axis_qdma_h2c_1_tready (m_axis_qdma_h2c_1_tready),
   
-    .m0_axil_awvalid          (m0_axil_awvalid),
-    .m0_axil_awaddr           (m0_axil_awaddr ),
-    .m0_axil_awready          (m0_axil_awready),
-    .m0_axil_wvalid           (m0_axil_wvalid ),
-    .m0_axil_wdata            (m0_axil_wdata  ),
-    .m0_axil_wready           (m0_axil_wready ),
-    .m0_axil_bvalid           (m0_axil_bvalid ),
-    .m0_axil_bresp            (m0_axil_bresp  ),
-    .m0_axil_bready           (m0_axil_bready ),
-    .m0_axil_arvalid          (m0_axil_arvalid),
-    .m0_axil_araddr           (m0_axil_araddr ),
-    .m0_axil_arready          (m0_axil_arready),
-    .m0_axil_rvalid           (m0_axil_rvalid ),
-    .m0_axil_rdata            (m0_axil_rdata  ),
-    .m0_axil_rresp            (m0_axil_rresp  ),
-    .m0_axil_rready           (m0_axil_rready ),
+    .m0_axil_awvalid          (s_axil_awvalid),
+    .m0_axil_awaddr           (s_axil_awaddr ),
+    .m0_axil_awready          (s_axil_awready),
+    .m0_axil_wvalid           (s_axil_wvalid ),
+    .m0_axil_wdata            (s_axil_wdata  ),
+    .m0_axil_wready           (s_axil_wready ),
+    .m0_axil_bvalid           (s_axil_bvalid ),
+    .m0_axil_bresp            (s_axil_bresp  ),
+    .m0_axil_bready           (s_axil_bready ),
+    .m0_axil_arvalid          (s_axil_arvalid),
+    .m0_axil_araddr           (s_axil_araddr ),
+    .m0_axil_arready          (s_axil_arready),
+    .m0_axil_rvalid           (s_axil_rvalid ),
+    .m0_axil_rdata            (s_axil_rdata  ),
+    .m0_axil_rresp            (s_axil_rresp  ),
+    .m0_axil_rready           (s_axil_rready ),
   
     .cmac_clk              (cmac_clk),
     .core_clk              (core_clk ),
     .axis_aclk             (axis_aclk),
-    .axil_aclk             (axil_aclk),
+    .axil_aclk             (core_clk),
     .axis_rst              (axis_rst ),
     .axil_rst              (axil_rst )
+  );
+
+  axi_clock_converter_0 u_clk_conv (
+    .s_axi_aclk    (axil_aclk),
+    .s_axi_aresetn (!axil_rst),
+    .s_axi_awaddr  (m0_axil_awaddr),
+    .s_axi_awprot  (),
+    .s_axi_awvalid (m0_axil_awvalid),
+    .s_axi_awready (m0_axil_awready),
+    .s_axi_wdata   (m0_axil_wdata  ),
+    .s_axi_wstrb   (4'b1111),
+    .s_axi_wvalid  (m0_axil_wvalid),
+    .s_axi_wready  (m0_axil_wready),
+    .s_axi_bresp   (m0_axil_bresp ),
+    .s_axi_bvalid  (m0_axil_bvalid),
+    .s_axi_bready  (m0_axil_bready),
+    .s_axi_araddr  (m0_axil_araddr),
+    .s_axi_arprot  (),
+    .s_axi_arvalid (m0_axil_arvalid),
+    .s_axi_arready (m0_axil_arready),
+    .s_axi_rdata   (m0_axil_rdata  ),
+    .s_axi_rresp   (m0_axil_rresp  ),
+    .s_axi_rvalid  (m0_axil_rvalid ),
+    .s_axi_rready  (m0_axil_rready ),
+    .m_axi_aclk    (core_clk),
+    .m_axi_aresetn (!core_rst),
+    .m_axi_awaddr  (s_axil_awaddr),
+    .m_axi_awprot  (s_axil_awvalid),
+    .m_axi_awvalid (s_axil_awready),
+    .m_axi_awready (s_axil_wdata  ),
+    .m_axi_wdata   (s_axil_wdata),
+    .m_axi_wstrb   (s_axil_wstrb),
+    .m_axi_wvalid  (s_axil_wvalid),
+    .m_axi_wready  (s_axil_wready),
+    .m_axi_bresp   (s_axil_bresp ),
+    .m_axi_bvalid  (s_axil_bvalid),
+    .m_axi_bready  (s_axil_bready),
+    .m_axi_araddr  (s_axil_araddr),
+    .m_axi_arprot  (),
+    .m_axi_arvalid (s_axil_arvalid),
+    .m_axi_arready (s_axil_arready),
+    .m_axi_rdata   (s_axil_rdata  ),
+    .m_axi_rresp   (s_axil_rresp  ),
+    .m_axi_rvalid  (s_axil_rvalid ),
+    .m_axi_rready  (s_axil_rready )
   );
 
   xilinx_shell_ip xilinx_nic_shell (

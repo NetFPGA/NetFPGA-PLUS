@@ -27,8 +27,6 @@ reg_defines.h
 lib_pkg_v1_0_rfs.vhd
 lib_srl_fifo_v1_0_rfs.vhd
 rwaxi
-scone
-cli
 rkd
 xgui
 ip_repo

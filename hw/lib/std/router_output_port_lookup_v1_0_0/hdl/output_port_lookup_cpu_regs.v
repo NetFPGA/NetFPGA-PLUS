@@ -370,6 +370,7 @@ parameter C_S_AXI_ADDR_WIDTH    = 32
                                         reset_reg[byte_index*8 +: 8] <=  S_AXI_WDATA[byte_index*8 +: 8];
                                     end
                         end
+                        default: ;
                 endcase
             end
             else begin

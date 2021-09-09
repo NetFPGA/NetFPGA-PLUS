@@ -62,9 +62,9 @@ RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 $(eval $(RUN_ARGS):;@:)
 
 
-all:	clean cores hwtestlib constraints
+all:	clean cores hwtestlib
 
-clean: libclean toolsclean projectsclean swclean constraintsclean
+clean: libclean toolsclean projectsclean swclean
 	@rm -rfv *.*~
 	@rm -rfv ip_proj
 	@rm -rfv ip_user_files
@@ -138,18 +138,6 @@ contribprojectsclean:
 	done;
 	@echo "/////////////////////////////////////////";
 	@echo "//\tContrib-projects cleaned.";
-	@echo "/////////////////////////////////////////";
-
-constraints:
-	$(MAKE) -C hw/lib/common/constraints
-	@echo "/////////////////////////////////////////";
-	@echo "//\tConstraints files are updated";
-	@echo "/////////////////////////////////////////";
-
-constraintsclean:
-	$(MAKE) -C hw/lib/common/constraints clean
-	@echo "/////////////////////////////////////////";
-	@echo "//\tConstraints files are cleaned";
 	@echo "/////////////////////////////////////////";
 
 contribprojects:

@@ -34,25 +34,16 @@ set_property PACKAGE_PIN BJ44 [get_ports sysclk_n];
 set_property IOSTANDARD LVDS [get_ports sysclk_n];
 set_property PACKAGE_PIN BJ43 [get_ports sysclk_p];
 set_property IOSTANDARD LVDS [get_ports sysclk_p];
-#create_clock -period  10.000 -name sysclk0 [get_ports sysclk0_p]
-#set_clock_groups -asynchronous -group [get_clocks sysclk0 -include_generated_clocks]
-
-#set_clock_groups -asynchronous -group [get_clocks SYSCLK0_300 -include_generated_clocks]
 #######################################################################
 # PCIe
 #######################################################################
 set_property PACKAGE_PIN AR14 [get_ports pci_clk_n]
 set_property PACKAGE_PIN AR15 [get_ports pci_clk_p]
-#create_clock -name sys_clk -period 10 [get_ports pci_clk_p]
 create_clock -period 10.000 -name pcie_refclk [get_ports pci_clk_p]
-
-
 
 set_property PULLUP true [get_ports pci_rst_n]
 set_property IOSTANDARD LVCMOS18 [get_ports pci_rst_n]
 set_property PACKAGE_PIN BH26 [get_ports pci_rst_n]
-
-set_false_path -through [get_ports pci_rst_n]
 #######################################################################
 # CMAC
 #######################################################################

@@ -238,7 +238,7 @@ set_property -dict {
     CONFIG.WUSER_WIDTH {0}
     CONFIG.BUSER_WIDTH {0}
     CONFIG.SI_CLK.FREQ_HZ {250000000}
-    CONFIG.MI_CLK.FREQ_HZ {340000000}
+    CONFIG.MI_CLK.FREQ_HZ ${datapath_freq_mhz}000000
     CONFIG.ACLK_ASYNC {1}
     CONFIG.SYNCHRONIZATION_STAGES {3}
 } [get_ips axi_clock_converter_0]

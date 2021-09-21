@@ -240,7 +240,7 @@ set_property -dict {
     CONFIG.WUSER_WIDTH {0}
     CONFIG.BUSER_WIDTH {0}
     CONFIG.SI_CLK.FREQ_HZ {250000000}
-    CONFIG.MI_CLK.FREQ_HZ {340000000}
+    CONFIG.MI_CLK.FREQ_HZ ${datapath_freq_mhz}000000
     CONFIG.ACLK_ASYNC {1}
     CONFIG.SYNCHRONIZATION_STAGES {3}
 } [get_ips axi_clock_converter_0]
@@ -374,6 +374,7 @@ wait_on_run synth
 launch_runs impl_1
 wait_on_run impl_1
 open_checkpoint project/${design}.runs/impl_1/top_postroute_physopt.dcp
+phys_opt_design -directive AggressiveExplore
 if {![file exists "../bitfiles"]} {
 	file mkdir "../bitfiles"
 }

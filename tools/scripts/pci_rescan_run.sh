@@ -31,19 +31,12 @@
 
 PcieBusPath=/sys/bus/pci/devices
 PcieDeviceList=`ls /sys/bus/pci/devices/`
-bus0="fail"
-bus1="fail"
+
 for BusNo in $PcieDeviceList
 do	
 	VenderId=`cat $PcieBusPath/$BusNo/device`
 	if [[ "$VenderId" = "0x903f" ]]; then
-		echo 1 > /sys/bus/pci/devices/$BusNo/remove
-		sleep 1
-		echo 1 > /sys/bus/pci/rescan
-		echo
-		echo "Completed rescan PCIe information !"
-		echo
-		bus0="pass"
+		dev_bus_0=$BusNo
 	fi
 done
 
@@ -51,16 +44,27 @@ for BusNo in $PcieDeviceList
 do	
 	VenderId=`cat $PcieBusPath/$BusNo/device`
 	if [[ "$VenderId" = "0x913f" ]]; then
-		echo 1 > /sys/bus/pci/devices/$BusNo/remove
-		sleep 1
-		echo 1 > /sys/bus/pci/rescan
-		echo
-		echo "Completed rescan PCIe information !"
-		echo
-		bus1="pass"
+		dev_bus_1=$BusNo
 	fi
 done
 
-if [ $bus0 == "fail" ] | [ $bus1 == "fail" ]; then
-	echo "Check programming FPGA or Reboot machine !"
+if [ -z $dev_bus_0 ]; then
+	exit
 fi
+if [ -z $dev_bus_1 ]; then
+	exit
+fi
+
+echo $dev_bus_0 > /sys/bus/pci/drivers/onic/unbind
+echo $dev_bus_1 > /sys/bus/pci/drivers/onic/unbind
+rmmod onic
+
+echo 1 > /sys/bus/pci/devices/$dev_bus_0/remove
+sleep 1
+echo 1 > /sys/bus/pci/rescan
+echo 1 > /sys/bus/pci/devices/$dev_bus_1/remove
+sleep 1
+echo 1 > /sys/bus/pci/rescan
+echo
+echo "Completed rescan PCIe information !"
+echo

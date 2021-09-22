@@ -166,13 +166,11 @@ module top #(
   end
   wire   core_rst  = core_rst_reg;
 
-  wire axis_aclk, axil_aclk, axil_aclk_buf;
-  wire axis_rst, axil_rst, axil_rst_buf;
+  wire axis_aclk, axil_aclk_250m;
+  wire axis_rst, axil_rst_250m;
 
   wire core_clk;
   wire locked;
-  assign axil_aclk = core_clk;
-  assign axil_rst = core_rst;
 
   clk_wiz_1 u_clk_wiz_1 (
     .clk_out1(core_clk),
@@ -297,8 +295,8 @@ module top #(
     .axis_aclk   (core_clk),
     .axis_resetn (!core_rst),
     //Registers clock
-    .axi_aclk    (axil_aclk),
-    .axi_resetn  (!axil_rst),
+    .axi_aclk    (core_clk),
+    .axi_resetn  (!core_rst),
 
     // Slave AXI Ports
     .S0_AXI_AWADDR  (S0_AXI_AWADDR ),
@@ -414,8 +412,8 @@ module top #(
   );
 
   axi_clock_converter_0 u_clk_conv (
-    .s_axi_aclk    (axil_aclk_buf),
-    .s_axi_aresetn (!axil_rst_buf),
+    .s_axi_aclk    (axil_aclk_250m),
+    .s_axi_aresetn (!axil_rst_250m),
     .s_axi_awaddr  (m_axil_awaddr),
     .s_axi_awprot  (0),
     .s_axi_awvalid (m_axil_awvalid),
@@ -435,8 +433,8 @@ module top #(
     .s_axi_rresp   (m_axil_rresp  ),
     .s_axi_rvalid  (m_axil_rvalid ),
     .s_axi_rready  (m_axil_rready ),
-    .m_axi_aclk    (axil_aclk),
-    .m_axi_aresetn (!axil_rst),
+    .m_axi_aclk    (core_clk),
+    .m_axi_aresetn (!core_rst),
     .m_axi_awaddr  (s_axil_awaddr),
     .m_axi_awprot  (),
     .m_axi_awvalid (s_axil_awvalid),
@@ -459,8 +457,8 @@ module top #(
   );
 
   axi_crossbar_0 u_interconnect (
-    .aclk          (axil_aclk),
-    .aresetn       (!axil_rst),
+    .aclk          (core_clk),
+    .aresetn       (!core_rst),
     .s_axi_awaddr  (s_axil_awaddr ),
     .s_axi_awprot  (),
     .s_axi_awvalid (s_axil_awvalid),
@@ -595,9 +593,9 @@ module top #(
     .core_clk           (core_clk),
     .core_rst           (core_rst),
     .axis_aclk          (axis_aclk),
-    .axil_aclk          (axil_aclk_buf),
+    .axil_aclk          (axil_aclk_250m),
     .axis_rst           (axis_rst),
-    .axil_rst           (axil_rst_buf)
+    .axil_rst           (axil_rst_250m)
   );
 
 endmodule 

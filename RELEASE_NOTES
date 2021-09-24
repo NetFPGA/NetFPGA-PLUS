@@ -41,6 +41,7 @@ This release contains:
     and use 300MHz for reference_router project to fix timing closure
     To change the running freq., please refer to each tcl file.
     e.g., NetFPGA-PLUS/hw/projects/reference_switch_lite/hw/tcl/reference_switch_lite.tcl
+  - scone is not fully tested.
 
 3. Wiki
   - Please refer to our wiki: https://github.com/NetFPGA/NetFPGA-PLUS/wiki

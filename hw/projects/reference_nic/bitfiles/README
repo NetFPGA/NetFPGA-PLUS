@@ -26,17 +26,17 @@
 Reference NIC bitfile is available for a direct download from the University of Cambridge servers:
 
 1. Reference NIC (VCU1525)
-url: 
-md5 checksum: 
+url:  http://www.cl.cam.ac.uk/research/srg/netos/projects/netfpga/bitfiles/NetFPGA-PLUS/1.0.0/reference_nic/reference_nic_vcu1525.bit
+md5 checksum: f689c1da8d1d02e31933fc50c6295431
 
 2. Reference NIC (U200)
-url: 
-md5 checksum: 
+url:  http://www.cl.cam.ac.uk/research/srg/netos/projects/netfpga/bitfiles/NetFPGA-PLUS/1.0.0/reference_nic/reference_nic_au200.bit
+md5 checksum: d7554958f440634a2dbd349e91cb9831
 
 3. Reference NIC (U250)
-url: 
-md5 checksum: 
+url:  http://www.cl.cam.ac.uk/research/srg/netos/projects/netfpga/bitfiles/NetFPGA-PLUS/1.0.0/reference_nic/reference_nic_au250.bit
+md5 checksum: d540af93f4eaf4b8e69f073086134922
 
 4. Reference NIC (U280)
-url: 
-md5 checksum: 
+url:  http://www.cl.cam.ac.uk/research/srg/netos/projects/netfpga/bitfiles/NetFPGA-PLUS/1.0.0/reference_nic/reference_nic_au280.bit
+md5 checksum: c3715ab5bc82a0beb84be00a29a32da7

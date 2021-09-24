@@ -26,17 +26,17 @@
 Reference Router bitfile is available for a direct download from the University of Cambridge servers:
 
 1. Reference Router (VCU1525)
-url: 
-md5 checksum: 
+url:  http://www.cl.cam.ac.uk/research/srg/netos/projects/netfpga/bitfiles/NetFPGA-PLUS/1.0.0/reference_router/reference_router_vcu1525.bit
+md5 checksum: 2ec97cfedcd09d716e62c8e7ec041878
 
 2. Reference Router (U200)
-url: 
-md5 checksum: 
+url:  http://www.cl.cam.ac.uk/research/srg/netos/projects/netfpga/bitfiles/NetFPGA-PLUS/1.0.0/reference_router/reference_router_au200.bit
+md5 checksum: 09cbb497a50def6263525e23dec5b8be
 
 3. Reference Router (U250)
-url: 
-md5 checksum: 
+url:  http://www.cl.cam.ac.uk/research/srg/netos/projects/netfpga/bitfiles/NetFPGA-PLUS/1.0.0/reference_router/reference_router_au250.bit
+md5 checksum: caf3ff3d42f7aeaa2fde6a1e1afc89bd
 
 4. Reference Router (U280)
-url: 
-md5 checksum: 
+url:  http://www.cl.cam.ac.uk/research/srg/netos/projects/netfpga/bitfiles/NetFPGA-PLUS/1.0.0/reference_router/reference_router_au280.bit
+md5 checksum: d8c6cb97505dd22edc30ed7e0af416d7

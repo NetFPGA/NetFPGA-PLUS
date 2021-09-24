@@ -26,17 +26,17 @@
 Reference Switch Lite bitfile is available for a direct download from the University of Cambridge servers:
 
 1. Reference Switch Lite (VCU1525)
-url: 
-md5 checksum: 
+url:  http://www.cl.cam.ac.uk/research/srg/netos/projects/netfpga/bitfiles/NetFPGA-PLUS/1.0.0/reference_switch_lite/reference_switch_lite_vcu1525.bit
+md5 checksum: aa9ad2347dceca220511410f47cbb6bf
 
 2. Reference Switch Lite (U200)
-url: 
-md5 checksum: 
+url:  http://www.cl.cam.ac.uk/research/srg/netos/projects/netfpga/bitfiles/NetFPGA-PLUS/1.0.0/reference_switch_lite/reference_switch_lite_au200.bit
+md5 checksum: 8f033f217695995d0c552608992de4da
 
 3. Reference Switch Lite (U250)
-url: 
-md5 checksum: 
+url:  http://www.cl.cam.ac.uk/research/srg/netos/projects/netfpga/bitfiles/NetFPGA-PLUS/1.0.0/reference_switch_lite/reference_switch_lite_au250.bit
+md5 checksum: 12c75a1931ace075598f0f70a22658ae
 
 4. Reference Switch Lite (U280)
-url: 
-md5 checksum: 
+url:  http://www.cl.cam.ac.uk/research/srg/netos/projects/netfpga/bitfiles/NetFPGA-PLUS/1.0.0/reference_switch_lite/reference_switch_lite_au280.bit
+md5 checksum: a907a5cb3ca006754b1f24e4fc04e7aa

@@ -26,17 +26,17 @@
 Reference Switch bitfile is available for a direct download from the University of Cambridge servers:
 
 1. Reference Switch (VCU1525)
-url: 
-md5 checksum: 
+url:  http://www.cl.cam.ac.uk/research/srg/netos/projects/netfpga/bitfiles/NetFPGA-PLUS/1.0.0/reference_switch/reference_switch_vcu1525.bit
+md5 checksum: b22506015c327aee7ebc3afb15a34f83
 
 2. Reference Switch (U200)
-url: 
-md5 checksum: 
+url:  http://www.cl.cam.ac.uk/research/srg/netos/projects/netfpga/bitfiles/NetFPGA-PLUS/1.0.0/reference_switch/reference_switch_au200.bit
+md5 checksum: eac1597bef620d510613686976ee81de
 
 3. Reference Switch (U250)
-url: 
-md5 checksum: 
+url:  http://www.cl.cam.ac.uk/research/srg/netos/projects/netfpga/bitfiles/NetFPGA-PLUS/1.0.0/reference_switch/reference_switch_au250.bit
+md5 checksum: 867c207c1e037a98287b27e374da79a9
 
 4. Reference Switch (U280)
-url: 
-md5 checksum: 
+url:  http://www.cl.cam.ac.uk/research/srg/netos/projects/netfpga/bitfiles/NetFPGA-PLUS/1.0.0/reference_switch/reference_switch_au280.bit
+md5 checksum: ae1a019c61f4c7554c91ef4934269d99

@@ -42,3 +42,5 @@ This release contains:
     To change the running freq., please refer to each tcl file.
     e.g., NetFPGA-PLUS/hw/projects/reference_switch_lite/hw/tcl/reference_switch_lite.tcl
 
+3. Wiki
+  - Please refer to our wiki: https://github.com/NetFPGA/NetFPGA-PLUS/wiki

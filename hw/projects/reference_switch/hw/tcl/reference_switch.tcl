@@ -47,6 +47,26 @@ set opl_bcam_size         16
 
 set opl_cam_depth_bits    [expr int(log(${opl_bcam_size})/log(2))]
 #####################################
+# Limit messages reported
+# These are typically not helpful.
+# But if you really want to see all messages
+# then set suppress_unwanted_warnings to 0.
+#####################################
+set suppress_unwanted_warnings 1
+if {$suppress_unwanted_warnings == 1} {
+	set_msg_config -id "Synth 8-11241" -limit 1 
+	set_msg_config -id "Synth 8-6014" -limit 1
+	set_msg_config -id "Synth 8-3848" -limit 1
+	set_msg_config -id "Synth 8-7129" -limit 1
+	set_msg_config -id "Synth 8-10592" -limit 1
+	set_msg_config -id "Synth 8-7154" -limit 1
+	set_msg_config -id "Synth 8-223"  -limit 1
+	set_msg_config -id "Synth 8-3332" -limit 1
+	set_msg_config -id "Synth 8-3886" -limit 1
+	set_msg_config -id "Synth 8-5396" -limit 1
+}
+
+#####################################
 # Project Settings
 #####################################
 create_project -name ${design} -force -dir "./${proj_dir}" -part ${device}
@@ -87,9 +107,11 @@ if {[string match $board_name "au280"]} {
 } elseif {[string match $board_name "vcu1525"]} {
 	add_files -fileset constraints -norecurse ${public_repo_dir}/common/constraints/au200_vcu1525_timing.tcl
 	add_files -fileset constraints -norecurse ./constraints/au250_au200_vcu1525_user_timing.tcl
-} else {
+} elseif {[string match $board_name "au250"]} {
 	add_files -fileset constraints -norecurse ${public_repo_dir}/common/constraints/au250_timing.tcl
 	add_files -fileset constraints -norecurse ./constraints/au250_au200_vcu1525_user_timing.tcl
+} else {
+	puts "ERROR: Unknown Board type $board_name"
 }
 set_property is_enabled true [get_files ${project_constraints}]
 set_property constrset constraints [get_runs synth_1]

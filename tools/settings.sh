@@ -23,13 +23,16 @@
 # @NETFPGA_LICENSE_HEADER_END@
 #
 ### User defined
-export NFPLUS_FOLDER=${HOME}/NetFPGA-PLUS
+export NFPLUS_FOLDER=${HOME}/NetFPGA-PLUS-GW
 export BOARD_NAME=au250
 export NF_PROJECT_NAME=reference_switch
 export PYTHON_BNRY=/usr/bin/python3
 
 ### Don't change
-export VERSION=2020.2
+# export VERSION=2020.2     -  GREG - had to change this to latest Vivado version
+export VERSION=2023.1
+
+
 export PROJECTS=${NFPLUS_FOLDER}/projects
 export CONTRIB_PROJECTS=${NFPLUS_FOLDER}/contrib-projects
 export NF_DESIGN_DIR=${NFPLUS_FOLDER}/hw/projects/${NF_PROJECT_NAME}
@@ -55,6 +58,7 @@ if [ ${BOARD_NAME} != "au280" -a \
 	return -1
 else
 	board_name=`echo "puts [get_board_parts -quiet -latest_file_version \"*:${BOARD_NAME}:*\"]" | vivado -nolog -nojournal -mode tcl | grep xilinx` 
+	echo "**** GREG: BOARD_NAME is $BOARD_NAME and board_name is $board_name"
 	if [ ${BOARD_NAME} = "au280" ] ; then
 		device="xcu280-fsvh2892-2L-e"
 	elif [ ${BOARD_NAME} = "au250" ] ; then
@@ -73,7 +77,7 @@ if [ ! -d ${NF_DESIGN_DIR} ] ; then
 	return -1
 fi
 
-echo "[ok]    All parameters has been checked."
+echo "[ok]    All parameters have been checked."
 
 vivado_version=`echo $XILINX_VIVADO | awk -F "/" 'NF>1{print $NF}'`
 if [ -z ${vivado_version} ]; then

@@ -138,29 +138,23 @@ set_property -dict { LOC U3 } [get_ports QSFP1_RX_N[0]]
 ##########################################################################
 # Timing
 ##########################################################################
-# CMAC user clock. 3.103ns = 322.27 MHz  (handles 65B pkts on a 512b bus with some extra slack)
-# Greg: The following hierarchy does not match actual hierarchy:
-# The instance cmac_port[0]*cmac_gtwiz_userclk_tx_inst is there but it has no pin txoutclk_out[0]
-# create_clock -period 3.103 -name cmac_clk_0 [get_pins -hier -filter name=~*cmac_port[0]*cmac_gtwiz_userclk_tx_inst/txoutclk_out[0]]
-# create_clock -period 3.103 -name cmac_clk_1 [get_pins -hier -filter name=~*cmac_port[1]*cmac_gtwiz_userclk_tx_inst/txoutclk_out[0]]
-create_clock -period 3.103 -name cmac_clk_0 [get_pins -hier -filter name=~*cmac_port[0]*cmac_gtwiz_userclk_tx_inst/gtwiz_userclk_tx_usrclk2_out]
-create_clock -period 3.103 -name cmac_clk_1 [get_pins -hier -filter name=~*cmac_port[1]*cmac_gtwiz_userclk_tx_inst/gtwiz_userclk_tx_usrclk2_out]
 
-# Greg: axis_aclk needs to be specified
+# axis_aclk needs to be specified
 create_clock -period 4.00 -name axis_aclk [get_pins -hier -filter name=~*u_top_wrapper/xilinx_nic_shell/axis_aclk]
 
 # Datapath Clock - 340MHz   (called core_clk internally apparently)
 create_clock -period 2.941 -name dp_clk [get_pins -hier -filter name=~*u_clk_wiz_1/clk_out1]
 
-# Greg: PCIe clock 100MHz
+# PCIe clock 100MHz
 create_clock -period 10.0 -name pcie_refclk [get_ports pci_clk_p]
 
+# Note: txoutclk_out[0] and txoutclk_out[0]_1 are created by the cmac librray constraints
 
 set_false_path -from [get_clocks axis_aclk] -to [get_clocks dp_clk]
 set_false_path -from [get_clocks dp_clk] -to [get_clocks axis_aclk]
-set_false_path -from [get_clocks cmac_clk_1] -to [get_clocks dp_clk]
-set_false_path -from [get_clocks dp_clk] -to [get_clocks cmac_clk_1]
-set_false_path -from [get_clocks cmac_clk_0] -to [get_clocks dp_clk]
-set_false_path -from [get_clocks dp_clk] -to [get_clocks cmac_clk_0]
+set_false_path -from [get_clocks dp_clk] -to [get_clocks txoutclk_out[0]]
+set_false_path -from [get_clocks txoutclk_out[0] ] -to [get_clocks dp_clk]
+set_false_path -from [get_clocks dp_clk] -to [get_clocks txoutclk_out[0]_1]
+set_false_path -from [get_clocks txoutclk_out[0]_1] -to [get_clocks dp_clk] 
 set_false_path -from [get_clocks clk_out1_qdma_subsystem_clk_div] -to [get_clocks axis_aclk]
 set_false_path -from [get_clocks dp_clk] -to [get_clocks clk_out1_qdma_subsystem_clk_div]

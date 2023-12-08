@@ -45,3 +45,9 @@ driver:
 
 clean:
 	$(MAKE) -C $(DRIVER_DIR) clean
+
+install:
+	$(MAKE) -C $(DRIVER_DIR) install
+
+uninstall:
+	$(MAKE) -C $(DRIVER_DIR) uninstall

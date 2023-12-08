@@ -62,12 +62,13 @@ struct xlni_ioctl_ifreq {
 #define	HAVE_ADDR			0x01
 #define	HAVE_VALUE			0x02
 #define	HAVE_IFACE			0x04
+#define	HAVE_DEBUG 			0x08
 
 static void
 usage(const char *progname)
 {
 
-	printf("Usage: %s -a <addr> [-w <value>] [-i <iface>]\n",
+	printf("Usage: %s -a <addr> [-d] [-w <value>] [-i <iface>]\n",
 	    progname);
 	_exit(1);
 }
@@ -88,7 +89,7 @@ main(int argc, char *argv[])
 	ifnam = "nf0";//NFPLUS_IFNAM_DEFAULT;
 	req = NFDP_IOCTL_CMD_READ_REG;
 	value = 0;
-	while ((rc = getopt(argc, argv, "+a:hi:w:")) != -1) {
+	while ((rc = getopt(argc, argv, "+a:dhi:w:")) != -1) {
 		switch (rc) {
 		case 'a':
 			l = strtoul(optarg, NULL, 0);
@@ -96,6 +97,9 @@ main(int argc, char *argv[])
 				errx(1, "Invalid address");
 			addr = (uint32_t)l;
 			flags |= HAVE_ADDR;
+			break;
+		case 'd':
+			flags |= HAVE_DEBUG;
 			break;
 		case 'i':
 			ifnam = optarg;
@@ -145,7 +149,12 @@ main(int argc, char *argv[])
 	memcpy(ifr.ifr_name, ifnam, ifnamlen);
 	ifr.ifr_name[ifnamlen] = '\0';
 	ifr.ifr_data = (char *)&sifr;
-	
+
+	if ((flags & HAVE_DEBUG) != 0) {
+		printf("IF: %s  Addr: 0x%08x   RD_IOCTL:%0d   WR_IOCTL:%0d\n",
+	       ifnam, addr, NFDP_IOCTL_CMD_READ_REG,NFDP_IOCTL_CMD_WRITE_REG );
+	}
+
 	rc = ioctl(fd, req, &ifr);
 	if (rc == -1)
 		err(1, "ioctl");

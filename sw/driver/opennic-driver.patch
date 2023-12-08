@@ -34,23 +34,28 @@ diff -uprN ./onic_hardware.h ./onic_hardware.h
  
  struct onic_qdma_h2c_param {
 diff -uprN ./onic_main.c ./onic_main.c
---- ./onic_main.c	2020-10-10 22:22:57.000000000 +0900
-+++ ./onic_main.c	2021-02-02 14:52:46.000000000 +0900
-@@ -187,7 +187,9 @@
-	strlcpy(netdev->name, dev_name, sizeof(netdev->name));
-
-	memset(&saddr, 0, sizeof(struct sockaddr));
-	memcpy(saddr.sa_data, onic_default_dev_addr, 6);
+--- ./onic_main.c	2023-12-07 12:27:36.237535443 +0000
++++ ./onic_main.c	2023-12-07 12:33:38.980629056 +0000
+@@ -129,6 +129,7 @@ static const struct net_device_ops onic_
+ 	.ndo_start_xmit = onic_xmit_frame,
+ 	.ndo_set_mac_address = onic_set_mac_address,
+ 	.ndo_do_ioctl = onic_do_ioctl,
++	.ndo_siocdevprivate = onic_siocdevprivate,
+ 	.ndo_change_mtu = onic_change_mtu,
+ 	.ndo_get_stats64 = onic_get_stats64,
+ };
+@@ -203,7 +204,9 @@ static int onic_probe(struct pci_dev *pd
+ 
+ 	memset(&saddr, 0, sizeof(struct sockaddr));
+ 	memcpy(saddr.sa_data, onic_default_dev_addr, 6);
 -	get_random_bytes(saddr.sa_data + 3, 3);
 +	saddr.sa_data[3] = pdev->bus->number;
 +	saddr.sa_data[4] = PCI_SLOT(pdev->devfn);
 +	saddr.sa_data[5] = PCI_FUNC(pdev->devfn);
-	onic_set_mac_address(netdev, (void *)&saddr);
-
-diff -uprN ./onic_main.c ./onic_main.c
---- ./onic_main.c	2020-10-10 22:22:57.000000000 +0900
-+++ ./onic_main.c	2021-02-02 14:52:46.000000000 +0900
-@@ -223,6 +223,15 @@ static int onic_probe(struct pci_dev *pd
+ 	onic_set_mac_address(netdev, (void *)&saddr);
+ 
+ 	priv = netdev_priv(netdev);
+@@ -241,6 +244,15 @@ static int onic_probe(struct pci_dev *pd
  	netif_set_real_num_tx_queues(netdev, priv->num_tx_queues);
  	netif_set_real_num_rx_queues(netdev, priv->num_rx_queues);
  
@@ -66,10 +71,11 @@ diff -uprN ./onic_main.c ./onic_main.c
  	rv = register_netdev(netdev);
  	if (rv < 0) {
  		dev_err(&pdev->dev, "register_netdev, err = %d", rv);
+
 diff -uprN ./onic_netdev.c ./onic_netdev.c
---- ./onic_netdev.c	2020-10-10 22:22:57.000000000 +0900
-+++ ./onic_netdev.c	2021-02-02 14:52:46.000000000 +0900
-@@ -24,6 +24,97 @@
+--- ./onic_netdev.c	2023-12-07 12:27:48.485237886 +0000
++++ ./onic_netdev.c	2023-12-07 12:33:03.369510418 +0000
+@@ -25,6 +25,97 @@
  
  #define ONIC_RX_DESC_STEP 256
  
@@ -167,7 +173,7 @@ diff -uprN ./onic_netdev.c ./onic_netdev.c
  inline static u16 onic_ring_get_real_count(struct onic_ring *ring)
  {
  	/* Valid writeback entry means one less count of descriptor entries */
-@@ -609,6 +700,34 @@ netdev_tx_t onic_xmit_frame(struct sk_bu
+@@ -742,6 +833,34 @@ netdev_tx_t onic_xmit_frame(struct sk_bu
  	return NETDEV_TX_OK;
  }
  
@@ -199,13 +205,13 @@ diff -uprN ./onic_netdev.c ./onic_netdev.c
 +}
 +#endif /*NF_IOCTl*/
 +
-     int onic_set_mac_address(struct net_device *dev, void *addr)
-     {
-     	u8 *dev_addr = (u8 *)addr;
-@@ -622,6 +741,50 @@ int onic_set_mac_address(struct net_devi
-
-     int onic_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
-     {
+ int onic_set_mac_address(struct net_device *dev, void *addr)
+ {
+ 	struct sockaddr *saddr = addr;
+@@ -758,6 +877,90 @@ int onic_set_mac_address(struct net_devi
+ 
+ int onic_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
+ {
 +#ifdef NF_IOCTL
 +	struct onic_private *priv = netdev_priv(dev);
 +	struct nfdp_dev *nfdev = onic_get_nfdp_dev(priv->hw.nfdp_handle);
@@ -229,11 +235,6 @@ diff -uprN ./onic_netdev.c ./onic_netdev.c
 +			err = -EFAULT;
 +			break;
 +		}
-+		//err = ioctl_write_reg(nfdev, &sifr);
-+		//if (err != 0) {
-+		//	err = -EFAULT;
-+		//	break;
-+		//}
 +		err = ioctl_read_reg(nfdev, &sifr);
 +		if (err != 0) {
 +			err = -EFAULT;
@@ -250,21 +251,72 @@ diff -uprN ./onic_netdev.c ./onic_netdev.c
 +		break;
 +	}
 +#endif /*NF_IOCTL*/
-         return 0;
-     }
++	return 0;
++}
++
++int onic_siocdevprivate(struct net_device *dev, struct ifreq *ifr, 
++		void *data, int cmd)
++{
++#ifdef NF_IOCTL
++	struct onic_private *priv = netdev_priv(dev);
++	struct nfdp_dev *nfdev = onic_get_nfdp_dev(priv->hw.nfdp_handle);
++	struct onic_ioctl_ifreq sifr;
++	int err;
++
++	switch(cmd) {
++	case NFDP_IOCTL_CMD_WRITE_REG:
++		err = copy_from_user(&sifr, ifr->ifr_data,
++			sizeof(struct onic_ioctl_ifreq));
++		if (err != 0) {
++			err = -EFAULT;
++			break;
++		}
++		err = ioctl_write_reg(nfdev, &sifr);
++		break;
++	case NFDP_IOCTL_CMD_READ_REG:
++		err = copy_from_user(&sifr, ifr->ifr_data,
++			sizeof(struct onic_ioctl_ifreq));
++		if (err != 0) {
++			err = -EFAULT;
++			break;
++		}
++		err = ioctl_read_reg(nfdev, &sifr);
++		if (err != 0) {
++			err = -EFAULT;
++			break;
++		}
++		err = copy_to_user(ifr->ifr_data, &sifr,
++			sizeof(struct onic_ioctl_ifreq));
++		if (err != 0)
++			err = -EFAULT;
++		break;
++	default:
++		pr_info("unspported ioctl 0x%8x", cmd);
++		err = -EOPNOTSUPP;
++		break;
++	}
++#endif /*NF_IOCTL*/
+ 	return 0;
+ }
  
 diff -uprN ./onic_netdev.h ./onic_netdev.h
---- ./onic_netdev.h	2020-10-10 22:22:57.000000000 +0900
-+++ ./onic_netdev.h	2021-02-02 14:52:46.000000000 +0900
-@@ -49,4 +49,27 @@ void onic_get_stats64(struct net_device 
+--- ./onic_netdev.h	2023-12-07 12:27:36.237535443 +0000
++++ ./onic_netdev.h	2023-12-07 12:35:34.613759583 +0000
+@@ -43,10 +43,32 @@ int onic_set_mac_address(struct net_devi
  
-     int onic_poll(struct napi_struct *napi, int budget);
+ int onic_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd);
+
++int onic_siocdevprivate(struct net_device *dev, struct ifreq *ifr, void *data, int cmd);
++
+ int onic_change_mtu(struct net_device *dev, int mtu);
+ 
+ void onic_get_stats64(struct net_device *dev, struct rtnl_link_stats64 *stats);
+ 
+ int onic_poll(struct napi_struct *napi, int budget);
  
 +
 +#define NF_IOCTL
 +#ifdef NF_IOCTL
-+//#ifndef __NF_IOCTL__
-+//#define __NF_IOCTL__
 +
 +struct nfdp_dev {
 +	struct pci_dev *pdev;
@@ -280,19 +332,6 @@ diff -uprN ./onic_netdev.h ./onic_netdev.h
 +int onic_create_nfdp_dev(unsigned long *handle, struct pci_dev *pdev);
 +
 +void onic_destroy_nfdp_dev(unsigned long handle);
-+//#endif /*__NF_IOCTL__ */
 +#endif /* NF_IOCTL */
 +
  #endif
-diff -uprN ./onic_register.h ./onic_register.h
---- ./onic_register.h	2020-10-10 22:22:57.000000000 +0900
-+++ ./onic_register.h	2021-02-02 14:52:46.000000000 +0900
-@@ -30,7 +30,7 @@ static inline void onic_write_reg(struct
- }
- 
- #define SHELL_START					0x0
--#define SHELL_END					0x10000
-+#define SHELL_END					0x40000
- #define SHELL_MAXLEN					(SHELL_END - SHELL_START)
- 
- /***** system config registers *****/

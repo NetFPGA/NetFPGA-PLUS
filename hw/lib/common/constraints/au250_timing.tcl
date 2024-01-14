@@ -15,6 +15,7 @@
 # limitations under the License.
 #
 # *************************************************************************
+# QDMA clock
 set_false_path -through [get_ports pci_rst_n]
 
 set axis_aclk [get_clocks -of_object [get_nets u_top_wrapper/axis_aclk]]

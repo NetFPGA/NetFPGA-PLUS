@@ -26,22 +26,12 @@
 #
 # @NETFPGA_LICENSE_HEADER_END@
 #
-GIT VERSION 1.0.0
+GIT VERSION 1.1.0
 
 This release contains:
 1. Designs
-  - reference design for L2 switch, router, nic on Alveo series FPGA cards
-    (e.g., U200, U250, U280) and VCU1525
-  - Linux driver (open-nic-driver), hardware testing and simulation enviroments are included.
-  - library cores to build reference_switch, reference_switch_lite, reference_router, 
-    reference_nic and simulation and hardware testings
+  - support Vivado 2023.2
+  - support OpenNIC Shell open-nic-shell (commit: 8077751)
+  - support OpenNIC Driver open-nic-driver (commit: cbac3b9)
 
-2. Notes
-  - For U280 board, please use 320MHz for reference_switch_lite project to fix timing closure,
-    and use 300MHz for reference_router project to fix timing closure
-    To change the running freq., please refer to each tcl file.
-    e.g., NetFPGA-PLUS/hw/projects/reference_switch_lite/hw/tcl/reference_switch_lite.tcl
-  - scone is not fully tested.
 
-3. Wiki
-  - Please refer to our wiki: https://github.com/NetFPGA/NetFPGA-PLUS/wiki

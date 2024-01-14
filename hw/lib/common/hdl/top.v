@@ -36,8 +36,34 @@ module top #(
 	parameter NF_C_S_AXI_DATA_WIDTH        = 32,
 	parameter NF_C_S_AXI_ADDR_WIDTH        = 32
 )(	
-`ifdef BOARD_AU280
-	output wire STAT_CATTRIP,
+`ifdef __au280__
+	output wire                    hbm_cattrip,
+	input  wire              [3:0] satellite_gpio,
+`elsif __au50__
+	output wire                    hbm_cattrip,
+	input  wire              [1:0] satellite_gpio,
+`elsif __au55n__
+	output wire                    hbm_cattrip,
+	input  wire              [3:0] satellite_gpio,
+`elsif __au55c__
+	output wire                    hbm_cattrip,
+	input  wire              [3:0] satellite_gpio,
+`elsif __au200__
+	//output                   [1:0] qsfp_resetl,
+	//input                    [1:0] qsfp_modprsl,
+	//input                    [1:0] qsfp_intl,
+	//output                   [1:0] qsfp_lpmode,
+	//output                   [1:0] qsfp_modsell,
+	input  wire              [3:0] satellite_gpio,
+`elsif __au250__
+	//output                   [1:0] qsfp_resetl,
+	//input                    [1:0] qsfp_modprsl,
+	//input                    [1:0] qsfp_intl,
+	//output                   [1:0] qsfp_lpmode,
+	//output                   [1:0] qsfp_modsell,
+	input  wire              [3:0] satellite_gpio,
+`elsif __au45n__
+	input  wire              [1:0] satellite_gpio,
 `endif
 	input wire QSFP0_CLOCK_P,
 	input wire QSFP0_CLOCK_N,
@@ -82,6 +108,10 @@ module top #(
 	input  wire [3:0] QSFP1_RX_P,
 	input  wire [3:0] QSFP1_RX_N,
 
+	// Satellite core
+	input  wire       satellite_uart_0_rxd,
+	output wire       satellite_uart_0_txd,
+
 	input  wire         sysclk_p,
 	input  wire         sysclk_n,
 
@@ -95,9 +125,9 @@ module top #(
 	input  wire [15:0]  pcie_rxn
 );
 
-`ifdef BOARD_AU280
-  assign STAT_CATTRIP = 1'b0;
-`endif 
+//`ifdef BOARD_AU280
+//  assign STAT_CATTRIP = 1'b0;
+//`endif 
 
 `ifndef BOARD_AU280
   // QSFP Clock for 156.25MHz (2'b01)
@@ -505,6 +535,35 @@ module top #(
     .C_TDATA_WIDTH    (C_IF_DATA_WIDTH),
     .C_TUSER_WIDTH    (C_IF_TUSER_WIDTH)
   ) u_top_wrapper (
+`ifdef __au280__
+    .hbm_cattrip    (hbm_cattrip   ),
+    .satellite_gpio (satellite_gpio),
+`elsif __au50__
+    .hbm_cattrip    (hbm_cattrip   ),
+    .satellite_gpio (satellite_gpio),
+`elsif __au55n__
+    .hbm_cattrip    (hbm_cattrip   ),
+    .satellite_gpio (satellite_gpio),
+`elsif __au55c__
+    .hbm_cattrip    (hbm_cattrip   ),
+    .satellite_gpio (satellite_gpio),
+`elsif __au200__
+    .qsfp_resetl    (/*qsfp_resetl   */),
+    .qsfp_modprsl   (/*qsfp_modprsl  */),
+    .qsfp_intl      (/*qsfp_intl     */),
+    .qsfp_lpmode    (/*qsfp_lpmode   */),
+    .qsfp_modsell   (/*qsfp_modsell  */),
+    .satellite_gpio (satellite_gpio),
+`elsif __au250__
+    .qsfp_resetl    (/*qsfp_resetl   */),
+    .qsfp_modprsl   (/*qsfp_modprsl  */),
+    .qsfp_intl      (/*qsfp_intl     */),
+    .qsfp_lpmode    (/*qsfp_lpmode   */),
+    .qsfp_modsell   (/*qsfp_modsell  */),
+    .satellite_gpio (satellite_gpio),
+`elsif __au45n__
+    .satellite_gpio (satellite_gpio),
+`endif
     // QSFP port0
     .qsfp0_rxp         (QSFP0_RX_P),
     .qsfp0_rxn         (QSFP0_RX_N),
@@ -530,6 +589,9 @@ module top #(
     .pcie_clk_p        (pci_clk_p),
     .pcie_clk_n        (pci_clk_n),
     .pcie_rst_n        (pci_rst_n),
+    // Satellite core
+    .satellite_uart_0_rxd(satellite_uart_0_rxd),
+    .satellite_uart_0_txd(satellite_uart_0_txd),
 
     .m_axil_awvalid    (m_axil_awvalid),
     .m_axil_awaddr     (m_axil_awaddr ),

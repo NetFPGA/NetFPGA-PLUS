@@ -271,7 +271,7 @@ module nf_attachment #(
   wire             S2_AXI_BVALID,   S1_AXI_BVALID,   S0_AXI_BVALID;
   wire             S2_AXI_AWREADY,  S1_AXI_AWREADY,  S0_AXI_AWREADY;
 
-  axi_crossbar_0 u_crossbar_m0 (
+  axi_crossbar_1 u_crossbar_m1 (
     .aclk          (axil_aclk),
     .aresetn       (!axil_rst),
     .s_axi_awaddr  (m0_axil_awaddr ),

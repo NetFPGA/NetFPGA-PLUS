@@ -25,7 +25,7 @@
 ### User defined
 export NFPLUS_FOLDER=${HOME}/NetFPGA-PLUS-GW
 export BOARD_NAME=au250
-export NF_PROJECT_NAME=reference_switch
+export NF_PROJECT_NAME=reference_dma
 export PYTHON_BNRY=/usr/bin/python3
 
 ### Don't change

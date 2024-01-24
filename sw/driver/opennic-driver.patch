@@ -36,16 +36,26 @@ diff -uprN ./onic_hardware.h ./onic_hardware.h
 diff -uprN ./onic_main.c ./onic_main.c
 --- ./onic_main.c	2023-12-07 12:27:36.237535443 +0000
 +++ ./onic_main.c	2023-12-07 12:33:38.980629056 +0000
-@@ -129,6 +129,7 @@ static const struct net_device_ops onic_
+@@ -22,6 +22,7 @@
+ #include <linux/etherdevice.h>
+ #include <linux/netdevice.h>
+ #include <linux/moduleparam.h>
++#include <linux/version.h>
+
+ #include "onic.h"
+ #include "onic_hardware.h"
+@@ -129,6 +130,9 @@ static const struct net_device_ops onic_
  	.ndo_start_xmit = onic_xmit_frame,
  	.ndo_set_mac_address = onic_set_mac_address,
  	.ndo_do_ioctl = onic_do_ioctl,
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,6,0)
 +	.ndo_siocdevprivate = onic_siocdevprivate,
++#endif
  	.ndo_change_mtu = onic_change_mtu,
  	.ndo_get_stats64 = onic_get_stats64,
  };
-@@ -203,7 +204,9 @@ static int onic_probe(struct pci_dev *pd
- 
+@@ -203,7 +207,9 @@ static int onic_probe(struct pci_dev *pd
+
  	memset(&saddr, 0, sizeof(struct sockaddr));
  	memcpy(saddr.sa_data, onic_default_dev_addr, 6);
 -	get_random_bytes(saddr.sa_data + 3, 3);
@@ -53,12 +63,12 @@ diff -uprN ./onic_main.c ./onic_main.c
 +	saddr.sa_data[4] = PCI_SLOT(pdev->devfn);
 +	saddr.sa_data[5] = PCI_FUNC(pdev->devfn);
  	onic_set_mac_address(netdev, (void *)&saddr);
- 
+
  	priv = netdev_priv(netdev);
-@@ -241,6 +244,15 @@ static int onic_probe(struct pci_dev *pd
+@@ -241,6 +247,15 @@ static int onic_probe(struct pci_dev *pd
  	netif_set_real_num_tx_queues(netdev, priv->num_tx_queues);
  	netif_set_real_num_rx_queues(netdev, priv->num_rx_queues);
- 
+
 +#ifdef NF_IOCTL
 +	rv = onic_create_nfdp_dev(&priv->hw.nfdp_handle, priv->pdev);
 +	if (rv < 0) {
@@ -81,7 +91,7 @@ diff -uprN ./onic_netdev.c ./onic_netdev.c
  
 +#ifdef NF_IOCTL
 +#define NFDP_OFFSET     0x0000
-+#define NFDP_END        0x70000
++#define NFDP_END        0x400000
 +#define NFDP_MAXLEN     NFDP_END - NFDP_OFFSET
 +
 +#define NFDP_IOCTL_CMD_WRITE_REG        (SIOCDEVPRIVATE+1)
@@ -208,55 +218,13 @@ diff -uprN ./onic_netdev.c ./onic_netdev.c
  int onic_set_mac_address(struct net_device *dev, void *addr)
  {
  	struct sockaddr *saddr = addr;
-@@ -758,6 +877,90 @@ int onic_set_mac_address(struct net_devi
+@@ -756,11 +875,61 @@ int onic_set_mac_address(struct net_devi
+ 	return 0;
+ }
  
- int onic_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
+-int onic_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
++int nf_onic_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
  {
-+#ifdef NF_IOCTL
-+	struct onic_private *priv = netdev_priv(dev);
-+	struct nfdp_dev *nfdev = onic_get_nfdp_dev(priv->hw.nfdp_handle);
-+	struct onic_ioctl_ifreq sifr;
-+	int err;
-+
-+	switch(cmd) {
-+	case NFDP_IOCTL_CMD_WRITE_REG:
-+		err = copy_from_user(&sifr, ifr->ifr_data,
-+			sizeof(struct onic_ioctl_ifreq));
-+		if (err != 0) {
-+			err = -EFAULT;
-+			break;
-+		}
-+		err = ioctl_write_reg(nfdev, &sifr);
-+		break;
-+	case NFDP_IOCTL_CMD_READ_REG:
-+		err = copy_from_user(&sifr, ifr->ifr_data,
-+			sizeof(struct onic_ioctl_ifreq));
-+		if (err != 0) {
-+			err = -EFAULT;
-+			break;
-+		}
-+		err = ioctl_read_reg(nfdev, &sifr);
-+		if (err != 0) {
-+			err = -EFAULT;
-+			break;
-+		}
-+		err = copy_to_user(ifr->ifr_data, &sifr,
-+			sizeof(struct onic_ioctl_ifreq));
-+		if (err != 0)
-+			err = -EFAULT;
-+		break;
-+	default:
-+		pr_info("unspported ioctl 0x%8x", cmd);
-+		err = -EOPNOTSUPP;
-+		break;
-+	}
-+#endif /*NF_IOCTL*/
-+	return 0;
-+}
-+
-+int onic_siocdevprivate(struct net_device *dev, struct ifreq *ifr, 
-+		void *data, int cmd)
-+{
 +#ifdef NF_IOCTL
 +	struct onic_private *priv = netdev_priv(dev);
 +	struct nfdp_dev *nfdev = onic_get_nfdp_dev(priv->hw.nfdp_handle);
@@ -299,13 +267,28 @@ diff -uprN ./onic_netdev.c ./onic_netdev.c
  	return 0;
  }
  
++int onic_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
++{
++	return nf_onic_do_ioctl(dev, ifr, cmd);
++}
++
++int onic_siocdevprivate(struct net_device *dev, struct ifreq *ifr, 
++		void *data, int cmd)
++{
++	return nf_onic_do_ioctl(dev, ifr, cmd);
++}
++
+ int onic_change_mtu(struct net_device *dev, int mtu)
+ {
+ 	netdev_info(dev, "Requested MTU = %d", mtu);
+ 
 diff -uprN ./onic_netdev.h ./onic_netdev.h
 --- ./onic_netdev.h	2023-12-07 12:27:36.237535443 +0000
 +++ ./onic_netdev.h	2023-12-07 12:35:34.613759583 +0000
 @@ -43,10 +43,32 @@ int onic_set_mac_address(struct net_devi
  
  int onic_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd);
-
+ 
 +int onic_siocdevprivate(struct net_device *dev, struct ifreq *ifr, void *data, int cmd);
 +
  int onic_change_mtu(struct net_device *dev, int mtu);

@@ -167,41 +167,41 @@ module nf_datapath #(
     );
     
   // tie off unused output connections to CMAC
-  assign s_axis_0_tready = '0;
-  assign s_axis_1_tready = '0;
+  assign s_axis_0_tready = 1'b0;
+  assign s_axis_1_tready = 1'b0;
 
-  assign m_axis_0_tdata = '0;
-  assign m_axis_0_tkeep = '0;
-  assign m_axis_0_tuser = '0;
-  assign m_axis_0_tlast = '0;
-  assign m_axis_1_tdata = '0;
-  assign m_axis_1_tkeep = '0;
-  assign m_axis_1_tuser = '0;
-  assign m_axis_1_tlast = '0;
+  assign m_axis_0_tdata = 0;
+  assign m_axis_0_tkeep = 0;
+  assign m_axis_0_tuser = 0;
+  assign m_axis_0_tlast = 1'b0;
+  assign m_axis_1_tdata = 0;
+  assign m_axis_1_tkeep = 0;
+  assign m_axis_1_tuser = 0;
+  assign m_axis_1_tlast = 1'b0;
 
   // not using S1_AXI or S2_AXI register interfaces at the moment.
-  assign S1_AXI_ARREADY = '0;
-  assign S1_AXI_RDATA   = '0;
-  assign S1_AXI_RRESP   = '0;
-  assign S1_AXI_RVALID  = '0;
-  assign S1_AXI_WREADY  = '0;
-  assign S1_AXI_BRESP   = '0;
-  assign S1_AXI_BVALID  = '0;
-  assign S1_AXI_AWREADY = '0;
-  assign S2_AXI_ARREADY = '0;
-  assign S2_AXI_RDATA   = '0;
-  assign S2_AXI_RRESP   = '0;
-  assign S2_AXI_RVALID  = '0;
-  assign S2_AXI_WREADY  = '0;
-  assign S2_AXI_BRESP   = '0;
-  assign S2_AXI_BVALID  = '0;
-  assign S2_AXI_AWREADY = '0;
+  assign S1_AXI_ARREADY = 1'b0;
+  assign S1_AXI_RDATA   = 0;
+  assign S1_AXI_RRESP   = 1'b0;
+  assign S1_AXI_RVALID  = 1'b0;
+  assign S1_AXI_WREADY  = 1'b0;
+  assign S1_AXI_BRESP   = 1'b0;
+  assign S1_AXI_BVALID  = 1'b0;
+  assign S1_AXI_AWREADY = 1'b0;
+  assign S2_AXI_ARREADY = 1'b0;
+  assign S2_AXI_RDATA   = 0;
+  assign S2_AXI_RRESP   = 1'b0;
+  assign S2_AXI_RVALID  = 1'b0;
+  assign S2_AXI_WREADY  = 1'b0;
+  assign S2_AXI_BRESP   = 1'b0;
+  assign S2_AXI_BVALID  = 1'b0;
+  assign S2_AXI_AWREADY = 1'b0;
   
-  // temporarirly tie of m_axis until we code up the outbound DMA side.
-  assign m_axis_2_tdata = '0;
-  assign m_axis_2_tkeep = '0;
-  assign m_axis_2_tuser = '0;
-  assign m_axis_2_tlast = '0;
+  // temporarirly tie off m_axis until we code up the outbound DMA side.
+  assign m_axis_2_tdata = 0;
+  assign m_axis_2_tkeep = 0;
+  assign m_axis_2_tuser = 0;
+  assign m_axis_2_tlast = 1'b0;
 
   // Data sink (data from DMA)
   nf_data_sink nf_data_sink_v1_0 (

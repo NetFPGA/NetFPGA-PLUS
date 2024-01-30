@@ -44,7 +44,7 @@ create_project -name ${design} -force -dir "./${proj_dir}" -part ${device} -ip
 set_property source_mgmt_mode All [current_project]  
 set_property top ${top} [current_fileset]
 set_property ip_repo_paths $::env(NFPLUS_FOLDER)/hw/lib/  [current_fileset]
-puts "Creating Input Arbiter IP"
+puts "Creating Data Sink IP"
 #####################################
 # Project Structure & IP Build
 #####################################
@@ -119,9 +119,6 @@ set_property display_name {C_BASEADDR} [ipx::get_user_parameters C_BASEADDR]
 set_property value {0x00000000} [ipx::get_user_parameters C_BASEADDR]
 set_property value_format {bitstring} [ipx::get_user_parameters C_BASEADDR]
 
-ipx::add_bus_parameter FREQ_HZ [ipx::get_bus_interfaces m_axis -of_objects [ipx::current_core]]
-ipx::add_bus_parameter FREQ_HZ [ipx::get_bus_interfaces s_axis_0 -of_objects [ipx::current_core]]
-ipx::add_bus_parameter FREQ_HZ [ipx::get_bus_interfaces s_axis_1 -of_objects [ipx::current_core]]
 ipx::add_bus_parameter FREQ_HZ [ipx::get_bus_interfaces s_axis_2 -of_objects [ipx::current_core]]
 
 ipx::infer_user_parameters [ipx::current_core]

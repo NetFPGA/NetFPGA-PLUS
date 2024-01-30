@@ -121,6 +121,13 @@ set_property constrset constraints [get_runs impl_1]
 # Project 
 #####################################
 update_ip_catalog
+# nf_data_sink
+create_ip -name nf_data_sink -vendor NetFPGA -library NetFPGA -module_name nf_data_sink_ip
+set_property CONFIG.C_M_AXIS_DATA_WIDTH ${datapath_width_bit} [get_ips nf_data_sink_ip]
+set_property CONFIG.C_S_AXIS_DATA_WIDTH ${datapath_width_bit} [get_ips nf_data_sink_ip]
+set_property generate_synth_checkpoint false [get_files nf_data_sink_ip.xci]
+reset_target all [get_ips nf_data_sink_ip]
+generate_target all [get_ips nf_data_sink_ip]
 # OPL
 create_ip -name switch_output_port_lookup -vendor NetFPGA -library NetFPGA -module_name switch_output_port_lookup_ip
 set_property CONFIG.C_CAM_LUT_DEPTH_BITS ${opl_cam_depth_bits} [get_ips switch_output_port_lookup_ip]

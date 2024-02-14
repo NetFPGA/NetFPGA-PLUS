@@ -67,9 +67,14 @@ struct xlni_ioctl_ifreq {
 static void
 usage(const char *progname)
 {
-
+	struct xlni_ioctl_ifreq sifr;
+	struct ifreq ifr;
 	printf("Usage: %s -a <addr> [-d] [-w <value>] [-i <iface>]\n",
 	    progname);
+	printf("NFDP_IOCTL_CMD_WRITE_REG is %0d\n", NFDP_IOCTL_CMD_WRITE_REG);
+	printf("NFDP_IOCTL_CMD_READ_REG is %0d\n", NFDP_IOCTL_CMD_READ_REG);
+	printf("Size of ifr is %lu \n",sizeof(ifr));
+	printf("Size of sifr is %lu \n",sizeof(sifr));
 	_exit(1);
 }
 
@@ -83,6 +88,7 @@ main(int argc, char *argv[])
 	unsigned long l;
 	uint32_t addr, value;
 	int fd, flags, rc, req;
+	int i;
 
 	flags = 0x00;
 	addr = 0;//NFPLUS_DEFAULT_TEST_ADDR;
@@ -154,6 +160,13 @@ main(int argc, char *argv[])
 		printf("IF: %s  Addr: 0x%08x   RD_IOCTL:%0d   WR_IOCTL:%0d\n",
 	       ifnam, addr, NFDP_IOCTL_CMD_READ_REG,NFDP_IOCTL_CMD_WRITE_REG );
 	}
+
+	printf("Addr of sifr is %llx\n",(unsigned long long)(&sifr));
+	printf("ifr before call: 0x");
+	for (i=0; i < sizeof(ifr); i++) {
+		printf("%02x ",(unsigned int)(((char *)&ifr)[i] & 0xff));
+	}
+	printf("\n");
 
 	rc = ioctl(fd, req, &ifr);
 	if (rc == -1)

@@ -22,6 +22,7 @@
 #
 # @NETFPGA_LICENSE_HEADER_END@
 #
+puts "===== Starting hw/projects/reference_dma/hw/tcl/reference_dma_sim.tcl ====="
 
 #### Change design settings here #######
 set design $::env(NF_PROJECT_NAME) 
@@ -66,6 +67,13 @@ set_property ip_repo_paths ${repo_dir} [current_fileset]
 # Project 
 #####################################
 update_ip_catalog
+# nf_data_sink
+create_ip -name nf_data_sink -vendor NetFPGA -library NetFPGA -module_name nf_data_sink_ip
+set_property CONFIG.C_M_AXIS_DATA_WIDTH ${datapath_width_bit} [get_ips nf_data_sink_ip]
+set_property CONFIG.C_S_AXIS_DATA_WIDTH ${datapath_width_bit} [get_ips nf_data_sink_ip]
+set_property generate_synth_checkpoint false [get_files nf_data_sink_ip.xci]
+reset_target all [get_ips nf_data_sink_ip]
+generate_target all [get_ips nf_data_sink_ip]
 # OPL
 create_ip -name switch_output_port_lookup -vendor NetFPGA -library NetFPGA -module_name switch_output_port_lookup_ip
 set_property CONFIG.C_CAM_LUT_DEPTH_BITS ${opl_cam_depth_bits} [get_ips switch_output_port_lookup_ip]
@@ -251,3 +259,4 @@ puts $output
 launch_simulation -simset sim_1 -mode behavioral
 run 10us
 
+puts "===== Leaving hw/projects/reference_dma/hw/tcl/reference_dma_sim.tcl ====="

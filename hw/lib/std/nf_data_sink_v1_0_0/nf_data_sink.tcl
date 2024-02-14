@@ -120,6 +120,8 @@ set_property value {0x00000000} [ipx::get_user_parameters C_BASEADDR]
 set_property value_format {bitstring} [ipx::get_user_parameters C_BASEADDR]
 
 ipx::add_bus_parameter FREQ_HZ [ipx::get_bus_interfaces s_axis_2 -of_objects [ipx::current_core]]
+ipx::add_bus_parameter FREQ_HZ [ipx::get_bus_interfaces S_AXI_ACLK -of_objects [ipx::current_core]]
+ipx::add_bus_parameter FREQ_HZ [ipx::get_bus_interfaces axis_aclk -of_objects [ipx::current_core]]
 
 ipx::infer_user_parameters [ipx::current_core]
 

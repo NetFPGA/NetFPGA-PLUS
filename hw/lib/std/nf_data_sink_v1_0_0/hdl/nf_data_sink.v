@@ -191,8 +191,8 @@ module nf_data_sink
   reg      [`REG_BYTESINHI_BITS] bytesinhi_reg;
   reg      [`REG_TIME_BITS]      time_reg;
 
-  wire clear_counters;
-  wire reset_registers;
+  reg clear_counters;
+  reg reset_registers;
   wire unused;
   reg enabled;
   reg sample_reg;
@@ -203,6 +203,7 @@ module nf_data_sink
   reg [31:0] pktin_count;
   reg[31:0] time_count;  // counts clocks since first active SOP
   reg[31:0] time_at_last_eop; // Time spent active. Updated ONLY at EOP.
+  reg [31:0] total_pkt_count; // EVERY EOP seen
 
   wire enabled_sop; 
   wire enabled_mop;
@@ -291,21 +292,23 @@ module nf_data_sink
     .resetn_sync    (resetn_sync)//synchronized reset, use for better timing
   );
 
-  assign clear_counters = reset_reg[0];
-  assign reset_registers = reset_reg[4];
 
   always @(posedge axis_aclk)
+
     if (~resetn_sync | reset_registers) begin
       id_reg            <= #1  `REG_ID_DEFAULT;
       version_reg       <= #1  `REG_VERSION_DEFAULT;
       ip2cpu_flip_reg   <= #1  `REG_FLIP_DEFAULT;
       ip2cpu_debug_reg  <= #1  `REG_DEBUG_DEFAULT;
       pktin_reg         <= #1  `REG_PKTIN_DEFAULT;
-      ip2cpu_enable_reg <= #1  `REG_ENABLE_DEFAULT;
+      ip2cpu_enable_reg <= {total_pkt_count[23:0], 3'd0, clear_counters, reset_registers, in_packet, active_reg, enabled};
       pktin_reg         <= #1  `REG_PKTIN_DEFAULT;
       bytesinlo_reg     <= #1  `REG_BYTESINLO_DEFAULT;
       bytesinhi_reg     <= #1  `REG_BYTESINHI_DEFAULT;
       time_reg          <= #1  `REG_TIME_DEFAULT;
+
+      clear_counters    <= 1'b1;
+      reset_registers   <= 1'b0;
 
       enabled          <= 1'b0;
       sample_reg       <= 1'd0;
@@ -316,7 +319,7 @@ module nf_data_sink
       in_packet        <= 1'b0;
       active_reg       <= 1'b0;
       time_at_last_eop <= 0;
-
+      total_pkt_count  <= 0;
       current_pkt_byte_count <= 0;
     end
     else begin
@@ -324,13 +327,17 @@ module nf_data_sink
       version_reg       <= #1 `REG_VERSION_DEFAULT;
       ip2cpu_flip_reg   <= #1 ~cpu2ip_flip_reg;
       ip2cpu_debug_reg  <= #1 `REG_DEBUG_DEFAULT+cpu2ip_debug_reg;
-      ip2cpu_enable_reg <= {active_reg, cpu2ip_enable_reg[0]};
+      ip2cpu_enable_reg <= {total_pkt_count[23:0], 3'd0, clear_counters, reset_registers, in_packet, active_reg, enabled};
 
       enabled   <= cpu2ip_enable_reg[0];
+      clear_counters    <= reset_reg[0];
+      reset_registers   <= reset_reg[4];
 
       // do not go active in the middle of a packet - wait until end of current packet.
       in_packet  <= enabled_sop | (in_packet & ~enabled_eop);
       active_reg <= enabled & (active_reg | (~active_reg & enabled_sop));
+
+      total_pkt_count <= total_pkt_count + {31'd0, s_axis_2_tvalid &  s_axis_2_tlast & s_axis_2_tready};
 
       // counters count when enabled.
 
@@ -348,9 +355,9 @@ module nf_data_sink
 
       pktin_reg     <= sample & active_reg  ? pktin_count          : active_reg  ? pktin_reg : 0;
       bytesinlo_reg <= sample & active_reg  ? bytesin_count[31:0]  : active_reg  ? bytesinlo_reg : 0;
-      bytesinhi_reg <= sample & active_reg  ? bytesin_count[63:32] : active_reg  ? bytesinhi_reg : 0;
+      // bytesinhi_reg <= sample & active_reg  ? bytesin_count[63:32] : active_reg  ? bytesinhi_reg : 0;
+      bytesinhi_reg <= total_pkt_count;
       time_reg      <= sample & active_reg  ? time_at_last_eop     : active_reg  ? time_reg : 0;
-
     end
 
 

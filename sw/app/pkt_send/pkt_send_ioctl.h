@@ -5,7 +5,7 @@
  *  File:
  *        pkt_send_ioctl.h
  *
- * $Id$
+ * $Id:$
  *
  * Author:
  *        Greg Watson

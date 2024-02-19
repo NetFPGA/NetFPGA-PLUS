@@ -5,7 +5,7 @@
  *  File:
  *        pkt_send.c
  *
- * $Id$
+ * $Id:$
  *
  * Author:
  *        Greg Watson
@@ -30,7 +30,6 @@
  *
 */
 
-#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -44,13 +43,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <net/ethernet.h>
+
 
 #include "pkt_send_ioctl.h"
+#include "pkt_send_lib.h"
+
+int debug;
 
 static void
 usage(const char *progname)
 {
-	printf("Usage: %s -a <addr> [-d] [-w <value>] [-i <iface>]\n",
+	printf("Usage: %s [-b <pkt_len>] [-d]\n",
 	    progname);
 	exit(1);
 }
@@ -58,21 +62,22 @@ usage(const char *progname)
 int main(int argc, char *argv[])
 {
 	char *ifnam;
-	uint32_t addr, value;
-	unsigned long l;
-	int rc, flags;
+	int rc;
+	uint32_t pkt_len; // without CRC
+	ds_sample_t sampled_regs;
 
-	flags = 0x00;
-	addr = 0x10000;//NFPLUS_DEFAULT_TEST_ADDR;
+	pkt_len = 60;
 	ifnam = "nf0";//NFPLUS_IFNAM_DEFAULT;
-	value = 0;
-	while ((rc = getopt(argc, argv, "+a:h")) != -1) {
+	while ((rc = getopt(argc, argv, "b:dh")) != -1) {
 		switch (rc) {
-		case 'a':
-			l = strtoul(optarg, NULL, 0);
-			if (l == ULONG_MAX || l > UINT32_MAX)
-				errx(1, "Invalid address - too long");
-			addr = (uint32_t)l;
+		case 'b':
+			pkt_len = strtoul(optarg, NULL, 0);
+			if (pkt_len < 60 || pkt_len > ETH_FRAME_LEN)
+				errx(1, "Invalid packet length. Must be 60-1514");
+			break;
+		case 'd':
+			debug = 1;
+			printf("DEBUG set to 1\n");
 			break;
 		case 'h':
 		case '?':
@@ -82,9 +87,29 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	rc = read_register (ifnam, addr, &value);
-	printf("flags %0d  Read from 0x%0x returned 0x%0x\n",flags, addr, value);
-	//rc = write_register (ifnam, addr, value);
+	rc = ps_get_id_ds(ifnam);
+	printf("Saw Module ID value 0x%0x\n", rc);
+
+	// Enable collection
+	if ((rc = ps_enable_ds(ifnam))) err(rc, "Unable to enable datasink module");
+
+	// Send packet
+	if ((rc = ps_send_pkt_socket(ifnam, pkt_len))) err(rc, "Unable to send packet");
+
+	// Sample registers
+	if ((rc = ps_sample_ds(ifnam ))) err(rc, "Unable to issue sample command to data_sink module.");
+
+	// Load shadow registers into sample structure
+	if ((rc = ps_get_sample_ds(ifnam, &sampled_regs))) err(rc, "Unable to read the sample shadow registers in data_sink module.");
+
+	printf("Num pkts: %d\n", sampled_regs.num_packets);
+	printf("Num bytes: %0lu\n", sampled_regs.num_bytes);
+	printf("Num clk periods of activity: %d\n", sampled_regs.num_ds_periods);
+
+	// DIsable collection and reset counters
+	if ((rc = ps_disable_ds(ifnam))) err(rc, "Unable to disable datasink module");
 
 	exit(0);
 }
+
+

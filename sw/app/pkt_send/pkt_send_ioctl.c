@@ -5,7 +5,7 @@
  *  File:
  *        pkt_send_ioctl.c
  *
- * $Id$
+ * $Id:$
  *
  * Author:
  *        Greg Watson
@@ -31,6 +31,8 @@
 */
 
 #include "pkt_send_ioctl.h"
+
+extern int debug;
 
 int call_ioctl (uint32_t addr, uint32_t op, char *ifnam, uint32_t *rd_data, uint32_t wr_data)
 {
@@ -79,12 +81,14 @@ int call_ioctl (uint32_t addr, uint32_t op, char *ifnam, uint32_t *rd_data, uint
 int
 read_register (char *ifnam, uint32_t addr, uint32_t *rd_data)
 {
-	return call_ioctl (addr, OP_IS_READ, ifnam, rd_data, addr);
+	if (debug) printf("DEBUG: read_register: reading address 0x%0x.\n",addr);
+	return call_ioctl (addr, OP_IS_READ, ifnam, rd_data, addr/*unused*/);
 }
 
 int
 write_register (char *ifnam, uint32_t addr, uint32_t wr_data)
 {
+	if (debug) printf("DEBUG: write_register: Write value 0x%0x to address 0x%0x.\n", wr_data, addr);
 	return call_ioctl (addr, OP_IS_WRITE, ifnam, NULL, wr_data);
 }
 

@@ -44,9 +44,9 @@ set_param general.maxThreads 8
 #####################################
 # Design Parameters on NF_DATAPATH
 #####################################
-set datapath_width_bit    1024
-set opl_bcam_size         16
-
+set datapath_width_bit        1024
+set opl_bcam_size             16
+set top_sim_barrier_num_ports 5
 set opl_cam_depth_bits    [expr int(log(${opl_bcam_size})/log(2))]
 #####################################
 # Project Settings
@@ -113,6 +113,7 @@ reset_target all [get_ips nf_mac_attachment_dma_ip]
 generate_target all [get_ips nf_mac_attachment_dma_ip]
 
 create_ip -name barrier -vendor NetFPGA -library NetFPGA -module_name barrier_ip
+set_property CONFIG.NUM_PORTS ${top_sim_barrier_num_ports} [get_ips barrier_ip]
 reset_target all [get_ips barrier_ip]
 generate_target all [get_ips barrier_ip]
 

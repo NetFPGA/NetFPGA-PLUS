@@ -44,68 +44,73 @@ from reg_defines_reference_dma import *
 conn = ('../connections/conn', [])
 nftest_init(sim_loop = ['nf0', 'nf1'], hw_config = [conn])
 
-if isHW():
-   # reset_counters (triggered by Write only event) for all the modules 
-   nftest_regwrite(NFPLUS_INPUT_ARBITER_0_RESET(), 0x1)
-   nftest_regwrite(NFPLUS_OUTPUT_PORT_LOOKUP_0_RESET(), 0x1)
-   nftest_regwrite(NFPLUS_OUTPUT_QUEUES_0_RESET(), 0x1)
+nftest_start()   # BARRIER 1
 
-nftest_start()
+# Enable the datasink counters
+nftest_regwrite(NFPLUS_NF_DATA_SINK_0_RESET(), 0x1) # reset counters
+nftest_regwrite(NFPLUS_NF_DATA_SINK_0_ENABLE(), 0x1)
 
+nftest_barrier() # BARRIER 2
 
 # set parameters
 SA = "aa:bb:cc:dd:ee:ff"
 nextHopMAC = "dd:55:dd:66:dd:77"
-if isHW():
-    NUM_PKTS = 1454
-else:
-    NUM_PKTS = 1
+NUM_PKTS = 5
 num_ports = 1
-
 pkts = []
 
 print("Sending now: ")
 totalPktLengths = [0,0]
 # send NUM_PKTS from ports nf2c0...nf2c1
 for i in range(NUM_PKTS):
-    if isHW():
-        for port in range(num_ports):
-            DA = "00:0a:35:03:00:%02x"%port
-            pkt = make_IP_pkt(dst_MAC=DA, src_MAC=SA, dst_IP=DST_IP,
-                             src_IP=SRC_IP, TTL=TTL,
-                             pkt_len=60+i) 
-            totalPktLengths[port] += len(pkt)
+    DA = "00:ca:fe:00:00:00"
+    pkt = Ether()/'012345678901234567890123456789012345678901234567890123456789'
+    pkt.time = ((i*(1e-8)) + (2e-7)) 
+    pkts.append(pkt)
 
-            nftest_send_dma('nf' + str(port), pkt)
-            nftest_expect_dma('nf' + str(port), pkt)
-    else:
-        DA = "00:ca:fe:00:00:00"
-        pkt = Ether()/'012345678901234567890123456789012345678901234567890123456789'
-        pkt.time = ((i*(1e-8)) + (1e-6)) 
-        pkts.append(pkt)
-
-if not isHW():  
-    # nftest_send_phy('nf0', pkts) 
-    # nftest_expect_dma('nf0', pkts) 
-    nftest_send_dma('nf0', pkts) 
+nftest_send_dma('nf0', pkts) 
 
 print("")
 
-nftest_barrier()
+nftest_barrier()  # BARRIER 3
 
-if isHW():
-    rres1=nftest_regread_expect(NFPLUS_INPUT_ARBITER_0_PKTIN(), NUM_PKTS*num_ports*2)
-    rres2=nftest_regread_expect(NFPLUS_INPUT_ARBITER_0_PKTOUT(), NUM_PKTS*num_ports*2)
-    rres3=nftest_regread_expect(NFPLUS_OUTPUT_QUEUES_0_PKTSTOREDPORT2(), NUM_PKTS*num_ports)
-    rres4=nftest_regread_expect(NFPLUS_OUTPUT_QUEUES_0_PKTREMOVEDPORT2(), NUM_PKTS*num_ports) 
-    rres5=nftest_regread_expect(NFPLUS_OUTPUT_PORT_LOOKUP_0_PKTIN(), NUM_PKTS*num_ports*2) 
-    rres6=nftest_regread_expect(NFPLUS_OUTPUT_PORT_LOOKUP_0_PKTOUT(), NUM_PKTS*num_ports*2) 
-    mres=[rres1,rres2,rres3,rres4,rres5,rres6]
-else:
-    nftest_regread_expect(NFPLUS_INPUT_ARBITER_0_PKTIN(), NUM_PKTS)
-    nftest_regread_expect(NFPLUS_INPUT_ARBITER_0_PKTOUT(), NUM_PKTS)
-    nftest_regread_expect(NFPLUS_OUTPUT_QUEUES_0_PKTSTOREDPORT2(), NUM_PKTS)
-    nftest_regread_expect(NFPLUS_OUTPUT_QUEUES_0_PKTREMOVEDPORT2(), NUM_PKTS) 
-    nftest_regread_expect(NFPLUS_OUTPUT_PORT_LOOKUP_0_PKTIN(), NUM_PKTS) 
-    nftest_regread_expect(NFPLUS_OUTPUT_PORT_LOOKUP_0_PKTOUT(), NUM_PKTS) 
-    mres=[]
+# sample the counters registers
+nftest_regwrite(NFPLUS_NF_DATA_SINK_0_ENABLE(), 0x3)
+
+nftest_regread_expect(NFPLUS_NF_DATA_SINK_0_ENABLE(), 0x503) # 5 pkts. active. enabled.
+nftest_regread_expect(NFPLUS_NF_DATA_SINK_0_BYTESINLO(), 0x140)
+nftest_regread_expect(NFPLUS_NF_DATA_SINK_0_BYTESINHI(), 0x0)
+time_clocks = nftest_regread_expect(NFPLUS_NF_DATA_SINK_0_TIME(), 0x2)
+print(f"Number of clocks sampled is {time_clocks}.")
+
+# Disable collection and reset counters and state.
+nftest_regwrite(NFPLUS_NF_DATA_SINK_0_ENABLE(), 0x0)
+# Enable collection
+nftest_regwrite(NFPLUS_NF_DATA_SINK_0_ENABLE(), 0x1)
+
+nftest_barrier()  # BARRIER 4
+
+pkts = []
+pkt = Ether()/('012345678901234567890123456789012345678901234567890123456789'*20)
+pkt.time = ((1e-8) + (2e-7)) 
+pkts.append(pkt)
+
+nftest_send_dma('nf0', pkts) 
+
+nftest_barrier()  # BARRIER 5
+
+nftest_regread_expect(NFPLUS_NF_DATA_SINK_0_ENABLE(), 0x1)
+nftest_regread_expect(NFPLUS_NF_DATA_SINK_0_ENABLE(), 0x1)
+
+# sample the counters registers
+nftest_regwrite(NFPLUS_NF_DATA_SINK_0_ENABLE(), 0x3)
+
+nftest_regread_expect(NFPLUS_NF_DATA_SINK_0_ENABLE(), 0x503) # 5 pkts. active. enabled.
+nftest_regread_expect(NFPLUS_NF_DATA_SINK_0_BYTESINLO(), 0x40)
+nftest_regread_expect(NFPLUS_NF_DATA_SINK_0_BYTESINHI(), 0x0)
+time_clocks = nftest_regread_expect(NFPLUS_NF_DATA_SINK_0_TIME(), 0x0)
+print(f"Number of clocks sampled is {time_clocks}.")
+
+mres=[]
+
+nftest_finish(mres) # BARRIER FINAL

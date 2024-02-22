@@ -56,11 +56,11 @@ use xil_defaultlib.axis_sim_pkg.all;
 entity axi_sim_transactor is
     generic (
         STIM_FILE       : string   := "../../reg_stim.axi";
-	EXPECT_FILE     : string   := "../../reg_expect.axi";
+        EXPECT_FILE     : string   := "../../reg_expect.axi";
         LOG_FILE        : string   := "../../reg_stim.log"
         );
     port (
-	axi_aclk		  : in std_logic;
+    axi_aclk		  : in std_logic;
         axi_resetn		  : in std_logic;                                     
         -- AXI Lite interface
         --
@@ -87,9 +87,9 @@ entity axi_sim_transactor is
         M_AXI_RVALID             : in  std_logic;
         M_AXI_RREADY             : out std_logic;
 
-	activity_trans_sim	 : out std_logic;
-	activity_trans_log	 : out std_logic;
-	barrier_req_trans   	 : out std_logic;
+    activity_trans_sim	 : out std_logic;
+    activity_trans_log	 : out std_logic;
+    barrier_req_trans   	 : out std_logic;
         barrier_proceed 	 : in std_logic
         );
 end;
@@ -162,7 +162,7 @@ begin
             end loop;
         end procedure;
 
-	-----------------------------------------------------------------------
+    -----------------------------------------------------------------------
         variable l: line;
         variable i: integer;
         variable c: character;
@@ -180,7 +180,7 @@ begin
             wait_cycle;
         end loop;
 
-	activity_trans_sim <= '0';
+    activity_trans_sim <= '0';
         barrier_req_trans <= '0';
 
         -- begin reading stimuli
@@ -190,40 +190,40 @@ begin
             lookahead_char( l, c, ok );
             next when not ok;
 
-	    if c = 'B' then 	        
-		    read_char( l, c );
-		    parse_int( l, i );
-		    quiescent;
-		    wait for ( i * 1 ns);
-		    wait_cycle;
-		    write(l, integer'image(now / 1 ns) & string'(" ns.") & string'(" Info: barrier request transactor")); 
-		    writeline( output, l );
-                    wait for (1 ns); 
-                    barrier_req_trans <= '1';
-                    while (barrier_proceed = '0') loop
-			wait until (barrier_proceed = '1');
-			end loop;
-		    wait for (1 ns);
-                    barrier_req_trans <= '0';
-		    wait until (barrier_proceed = '0');
-		    write(l, integer'image(now / 1 ns) & string'(" ns.") & string'("Info: barrier complete transactor")); 
-		    writeline( output, l );
-		  
-	    elsif c = 'N' then 	        
-		    read_char( l, c );
-		    parse_int( l, v );
-		    quiescent;
-		    wait for ( v * 1 ns);
-		    wait_cycle;
+            if c = 'B' then 	        
+                read_char( l, c );
+                parse_int( l, i );
+                quiescent;
+                wait for ( i * 1 ns);
+                wait_cycle;
+                write(l, integer'image(now / 1 ns) & string'(" ns.") & string'(" Info: barrier request transactor")); 
+                writeline( output, l );
+                wait for (1 ns); 
+                barrier_req_trans <= '1';
+                while (barrier_proceed = '0') loop
+                    wait until (barrier_proceed = '1');
+                end loop;
+                wait for (1 ns);
+                barrier_req_trans <= '0';
+                wait until (barrier_proceed = '0');
+                write(l, integer'image(now / 1 ns) & string'(" ns.") & string'("Info: barrier complete transactor")); 
+                writeline( output, l );
+            
+            elsif c = 'N' then 	        
+                read_char( l, c );
+                parse_int( l, v );
+                quiescent;
+                wait for ( v * 1 ns);
+                wait_cycle;
 
-	    elsif c = 'S' then          -- wait for relative time (ns)
-               	    read_char( l, c );      -- discard operator
-                    parse_int( l, i );
-                    quiescent;
-		    wait for ( i * 1 ns);                
-                    wait_cycle;
-		
-	                -- operator @(N): wait until absolute time N ns
+            elsif c = 'S' then          -- wait for relative time (ns)
+                read_char( l, c );      -- discard operator
+                parse_int( l, i );
+                quiescent;
+                wait for ( i * 1 ns);                
+                wait_cycle;
+            
+            -- operator @(N): wait for time N ns
             elsif c = '@' then          -- wait until absolute time (ns)
                 read_char( l, c );      -- discard operator
                 parse_int( l, i );
@@ -231,87 +231,89 @@ begin
                 wait for ( i * 1 ns);    
                 wait_cycle;
 
-	    elsif c = 'R' then
-		    read_char( l, c );
-		    parse_int( l, i );
-		    report "Time is " & integer'image(now / 1 ns) & string'(" ns.");
-		    write(l, string'("Read Register!"));
-		    writeline( output, l );
-		    quiescent;
-		    wait for ( i * 1 ns);
-		    wait_cycle;
-
-	    elsif c = 'W' then          
-                read_char( l, c );      
+            elsif c = 'R' then
+                read_char( l, c );
                 parse_int( l, i );
-		report "Time is " & integer'image(now / 1 ns) & string'(" ns.");
-		write(l, string'("Write Register!"));
-		writeline( output, l );
+                report "Time is " & integer'image(now / 1 ns) & string'(" ns.");
+                write(l, string'("Read Register!"));
+                writeline( output, l );
                 quiescent;
                 wait for ( i * 1 ns);
                 wait_cycle;
 
-	    elsif c = 'D' then          
+            elsif c = 'W' then          
                 read_char( l, c );      
                 parse_int( l, i );
-		report "Time is " & integer'image(now / 1 ns) & string'(" ns.");
-		write(l, string'("Info: delaying ") & integer'image(i) & string'(" ns"));
-		writeline( output, l );
-		quiescent;
+                report "Time is " & integer'image(now / 1 ns) & string'(" ns.");
+                write(l, string'("Write Register!"));
+                writeline( output, l );
+                quiescent;
                 wait for ( i * 1 ns);
                 wait_cycle;
-		
+
+            elsif c = 'D' then          
+                read_char( l, c );      
+                parse_int( l, i );
+                report "Time is " & integer'image(now / 1 ns) & string'(" ns.");
+                write(l, string'("Info: delaying ") & integer'image(i) & string'(" ns"));
+                writeline( output, l );
+                quiescent;
+                wait for ( i * 1 ns);
+                wait_cycle;
+            
             else
-			activity_trans_sim <= '1';
-              		-- parse out each component of the stimulus
-			parse_slv( l, w_req_addr, dontcare );
-			w_pending := sl( not dontcare );
-		        w_req_valid <= w_pending;
-		        read_char( l, c );      -- discard ','
-			parse_slv( l, w_req_data, dontcare );
-			if w_pending = '1' then
-		            assert not dontcare
-		                report STIM_FILE & ": malformed write request: missing data"
-		                severity warning;
-		        end if;
-		        read_char( l, c );      -- discard ','
-			
-			parse_slv( l, w_req_strb, dontcare );
-			if w_pending = '1' then
-		            assert not dontcare
-		                report STIM_FILE & ": malformed write request: missing byte lane strobe"
-		                severity warning;
-		        end if;
-		        read_char( l, c );      -- discard ','
-			parse_slv( l, r_req_addr, dontcare );
-			r_pending := sl( not dontcare );
-		        r_req_valid <= r_pending;
-		        wait_cycle;
-		        -- block until accepted
-			while ((w_pending and not w_req_ready) or (r_pending and not r_req_ready)) = '1' loop
-		            wait_cycle;
-		        end loop;
-			w_req_valid <= '0';
-		        r_req_valid <= '0';
-		        -- wait for transactions to return, as required
-		        read_char( l, c );      -- read terminal wait flag
-		        if c = '.' then         -- '.' == wait for result
-			    while (w_pending or r_pending) = '1' loop
-				wait_cycle;
-		                if w_rsp_valid = '1' and w_rsp_addr = w_req_addr then
-				    w_pending := '0';
-		                end if;
-		                if r_rsp_valid = '1' and r_rsp_addr = r_req_addr then
-				    r_pending := '0';
-		                end if;
-			    end loop;
-			elsif c = ',' then      -- continue immediately        
-			else   
-		            assert false
-		                report STIM_FILE & ": bad input: expected terminal ',' or '.'"
-		                severity failure;
-		        end if;
-			activity_trans_sim <= '0';
+                activity_trans_sim <= '1';
+                -- parse out each component of the stimulus
+                parse_slv( l, w_req_addr, dontcare );
+                w_pending := sl( not dontcare );
+                w_req_valid <= w_pending;
+                read_char( l, c );      -- discard ','
+                parse_slv( l, w_req_data, dontcare );
+                if w_pending = '1' then
+                    assert not dontcare
+                        report STIM_FILE & ": malformed write request: missing data"
+                    severity warning;
+                end if;
+                read_char( l, c );      -- discard ','
+                
+                parse_slv( l, w_req_strb, dontcare );
+                if w_pending = '1' then
+                    assert not dontcare
+                    report STIM_FILE & ": malformed write request: missing byte lane strobe"
+                    severity warning;
+                end if;
+                read_char( l, c );      -- discard ','
+                parse_slv( l, r_req_addr, dontcare );
+                r_pending := sl( not dontcare );
+                r_req_valid <= r_pending;
+                wait_cycle;
+                -- block until accepted
+                while ((w_pending and not w_req_ready) or (r_pending and not r_req_ready)) = '1' loop
+                    wait_cycle;
+                end loop;
+                w_req_valid <= '0';
+                r_req_valid <= '0';
+                -- wait for transactions to return, as required
+                read_char( l, c );      -- read terminal wait flag
+
+                if c = '.' then         -- '.' == wait for result
+                    while (w_pending or r_pending) = '1' loop
+                        wait_cycle;
+                        if w_rsp_valid = '1' and w_rsp_addr = w_req_addr then
+                            w_pending := '0';
+                        end if;
+                        if r_rsp_valid = '1' and r_rsp_addr = r_req_addr then
+                            r_pending := '0';
+                        end if;
+                    end loop;
+                elsif c = ',' then      -- continue immediately        
+                else   
+                    assert false
+                    report STIM_FILE & ": bad input: expected terminal ',' or '.'"
+                    severity failure;
+                end if;
+
+            activity_trans_sim <= '0';
             end if;
             deallocate(l);              -- finished with input line
         end loop;
@@ -323,7 +325,7 @@ begin
         write( l, STIM_FILE & string'(": end of stimuli @ ")  & integer'image(now / 1 ns) & string'(" ns.") );
         writeline( output, l );
         wait;
-    end process;
+    end process; -- Stimulation
 
     expected: process 
 
@@ -339,15 +341,15 @@ begin
                 lp := lp - 1;
             end loop;
         end procedure;
-	-----------------------------------------------------------------------
+    -----------------------------------------------------------------------
 
-	variable l: line;
+    variable l: line;
         variable i: integer;
-	variable t, p: integer :=0;
+    variable t, p: integer :=0;
         variable c: character;
         variable ok, dontcare: boolean;
-	variable write_pending, read_pending: std_logic;
-	
+    variable write_pending, read_pending: std_logic;
+    
     begin
        
         -- NB: Reset is ignored except at the beginning of simulation.
@@ -356,86 +358,87 @@ begin
             wait_cycle;
         end loop;	
 
-	 -- begin reading stimuli
+     -- begin reading stimuli
         while not endfile( expect ) loop
             -- Main dispatch: Get and parse input
             readline( expect, l );
             lookahead_char( l, c, ok );
             next when not ok;   
 
-      	    if c = 'B' then 	        
-		    read_char( l, c );
-		    parse_int( l, i );
-		    wait for ( i * 1 ns);
-		    wait_cycle;
+            if c = 'B' then 	        
+                read_char( l, c );
+                parse_int( l, i );
+                wait for ( i * 1 ns);
+                wait_cycle;
 
-	    elsif c = 'R' then
-		    read_char( l, c );
-		    parse_int( l, i );
-		    v := v + 1;
-		    wait for ( i * 1 ns);
-		    wait_cycle;
+            elsif c = 'R' then
+                read_char( l, c );
+                parse_int( l, i );
+                v := v + 1;
+                wait for ( i * 1 ns);
+                wait_cycle;
 
-	    elsif c = 'W' then          -- wait until absolute time (ns)
+            elsif c = 'W' then          -- wait until absolute time (ns)
                 read_char( l, c );      -- discard operator
                 parse_int( l, i );
                 wait for ( i * 1 ns);
                 wait_cycle;
 
-            -- operator @(N): wait until absolute time N ns
+                -- operator @(N): wait until absolute time N ns
             elsif c = '@' then          -- wait until absolute time (ns)
                 read_char( l, c );      -- discard operator
                 parse_int( l, i );
                 wait for ( i * 1  ns);    
                 wait_cycle;
 
-	    elsif c = '+' then          -- wait for relative time (ns)
-               	    read_char( l, c );      -- discard operator
-                    parse_int( l, i );
-		    wait for ( i * 1 ns);                
+            elsif c = '+' then          -- wait for relative time (ns)
+                read_char( l, c );      -- discard operator
+                parse_int( l, i );
+                wait for ( i * 1 ns);                
                     wait_cycle;
 
             else
-			parse_slv( l, addr_r, dontcare );
-			read_pending := sl( not dontcare );
-		        read_char( l, c );      -- discard ','
-			parse_slv( l, data_r, dontcare );
-			if read_pending = '1' then
-		        assert not dontcare
-		              report EXPECT_FILE & ": malformed read request: missing data"
-		              severity warning;
-			end if;
-			wait_cycle;
-		        -- block until accepted
-			while (read_pending and not r_req_ready) = '1' loop
-		            wait_cycle;
-		        end loop;
-		        -- wait for transactions to return, as required
-		        read_char( l, c );      -- read terminal wait flag
-		        if c = '.' then         -- '.' == wait for result
-			    while (read_pending) = '1' loop
-		                wait_cycle;
-		                if r_rsp_valid = '1' and addr_r = r_rsp_addr then
-		                    read_pending := '0';
-		                end if;
-		            end loop;  
-			elsif c = ',' then      -- continue immediately                   			
-			else    
-		            assert false
-		                report STIM_FILE & ": bad input: expected terminal ',' or '.'"
-		                severity failure;
-		        end if;		
+                parse_slv( l, addr_r, dontcare );
+                read_pending := sl( not dontcare );
+                read_char( l, c );      -- discard ','
+                parse_slv( l, data_r, dontcare );
+                if read_pending = '1' then
+                    assert not dontcare
+                    report EXPECT_FILE & ": malformed read request: missing data"
+                    severity warning;
+                end if;
+                wait_cycle;
+                    -- block until accepted
+                while (read_pending and not r_req_ready) = '1' loop
+                    wait_cycle;
+                end loop;
+                -- wait for transactions to return, as required
+                read_char( l, c );      -- read terminal wait flag
+                if c = '.' then         -- '.' == wait for result
+                    while (read_pending) = '1' loop
+                        wait_cycle;
+                        if r_rsp_valid = '1' and addr_r = r_rsp_addr then
+                            read_pending := '0';
+                        end if;
+                    end loop;  
+                elsif c = ',' then      -- continue immediately                   			
+                else    
+                    assert false
+                    report STIM_FILE & ": bad input: expected terminal ',' or '.'"
+                    severity failure;
+                end if;		
             end if;
             deallocate(l);              -- finished with input line
         end loop; 
 
-	-- End of stimuli.
+    -- End of stimuli.
         write( l, string'("") );
         writeline( output, l );
         write( l, EXPECT_FILE & string'(": end of stimuli @ ")  & integer'image(now / 1 ns) & string'(" ns.") );
         writeline( output, l );
         wait;
-    end process;
+    end process;  -- Expected
+
 --------------------------------------------------------------------------------------------------
 
 
@@ -453,60 +456,60 @@ begin
         end function;
 
         variable l: line;
-	variable g: integer;
-	variable b: integer := 0;
+    variable g: integer;
+    variable b: integer := 0;
 
     begin
-	activity_trans_log <= '0';
+    activity_trans_log <= '0';
 
-			if rising_edge( axi_aclk ) then
-			    if w_rsp_valid = '1' then
-				activity_trans_log <= '1';
-				hwrite( l, w_rsp_addr, RIGHT, w_rsp_addr'length/4 );
-				write( l, string'(" <- ") );
-				hwrite( l, w_rsp_data, RIGHT, w_rsp_data'length/4 );
-				write( l, string'(" (" & result_str( w_rsp_rsp ) & ")") &
-				          ht & ht & string'("# ") & integer'image(now / 1 ns) & string'(" ns") );
-				writeline( log, l );	
-			    end if;
-			    if r_rsp_valid = '1' then
-				activity_trans_log <= '1';
-				hwrite( l, r_rsp_addr, RIGHT, r_rsp_addr'length/4 );
-				write( l, string'(" -> ") );
-				if addr_r = r_rsp_addr then
+            if rising_edge( axi_aclk ) then
+                if w_rsp_valid = '1' then
+                activity_trans_log <= '1';
+                hwrite( l, w_rsp_addr, RIGHT, w_rsp_addr'length/4 );
+                write( l, string'(" <- ") );
+                hwrite( l, w_rsp_data, RIGHT, w_rsp_data'length/4 );
+                write( l, string'(" (" & result_str( w_rsp_rsp ) & ")") &
+                          ht & ht & string'("# ") & integer'image(now / 1 ns) & string'(" ns") );
+                writeline( log, l );	
+                end if;
+                if r_rsp_valid = '1' then
+                activity_trans_log <= '1';
+                hwrite( l, r_rsp_addr, RIGHT, r_rsp_addr'length/4 );
+                write( l, string'(" -> ") );
+                if addr_r = r_rsp_addr then
 
-				    for g in 0 to 31 loop
-					if (data_r(g) = '0') and (r_rsp_data(g) = 'X') then
-					    b := 1;
-					end if;
-				    end loop;
+                    for g in 0 to 31 loop
+                    if (data_r(g) = '0') and (r_rsp_data(g) = 'X') then
+                        b := 1;
+                    end if;
+                    end loop;
 
-				    if data_r = r_rsp_data then
-				        hwrite( l, r_rsp_data, RIGHT, r_rsp_data'length/4 );
-				        write( l, string'(" (" & result_str( r_rsp_rsp ) & ")") & ht & ht & string'("# ") & integer'image(now / 1 ns) & string'(" ns") );
-				    elsif b = 1 then 
-					hwrite( l, r_rsp_data, RIGHT, r_rsp_data'length/4 );
-				        write( l, string'(" (" & result_str( r_rsp_rsp ) & ")") & ht & ht & string'("# ") & integer'image(now / 1 ns) & string'(" ns") & string'(" ## ") & string'("WARNING! Undefined bits -- check waveforms!!!!") );
-				    elsif data_r /= r_rsp_data and b = 0 then
-					activity_trans_log <= '0';
-					write( l, string'("Data Error: register error!!!! "));
-					write( l, string'("Seen from user: "));
-					hwrite( l, data_r);
-					write( l, string'(" but expected from system: "));
-					hwrite( l, r_rsp_data, RIGHT, r_rsp_data'length/4 );
-				    end if;
-				else     
-					activity_trans_log <= '0';
-					write( l, string'("Address Error: register error!!!! "));
-					write( l, string'("Seen from user: "));
-					hwrite( l, addr_r);
-					write( l, string'(" but expected from system: "));
-					hwrite( l, r_rsp_addr, RIGHT, r_rsp_addr'length/4 );
-				end if;
-				writeline( log, l );
-			    end if;
-			end if; 
-	
+                    if data_r = r_rsp_data then
+                        hwrite( l, r_rsp_data, RIGHT, r_rsp_data'length/4 );
+                        write( l, string'(" (" & result_str( r_rsp_rsp ) & ")") & ht & ht & string'("# ") & integer'image(now / 1 ns) & string'(" ns") );
+                    elsif b = 1 then 
+                    hwrite( l, r_rsp_data, RIGHT, r_rsp_data'length/4 );
+                        write( l, string'(" (" & result_str( r_rsp_rsp ) & ")") & ht & ht & string'("# ") & integer'image(now / 1 ns) & string'(" ns") & string'(" ## ") & string'("WARNING! Undefined bits -- check waveforms!!!!") );
+                    elsif data_r /= r_rsp_data and b = 0 then
+                    activity_trans_log <= '0';
+                    write( l, string'("Data Error: register error!!!! "));
+                    write( l, string'("Seen from user: "));
+                    hwrite( l, data_r);
+                    write( l, string'(" but expected from system: "));
+                    hwrite( l, r_rsp_data, RIGHT, r_rsp_data'length/4 );
+                    end if;
+                else     
+                    activity_trans_log <= '0';
+                    write( l, string'("Address Error: register error!!!! "));
+                    write( l, string'("Seen from user: "));
+                    hwrite( l, addr_r);
+                    write( l, string'(" but expected from system: "));
+                    hwrite( l, r_rsp_addr, RIGHT, r_rsp_addr'length/4 );
+                end if;
+                writeline( log, l );
+                end if;
+            end if; 
+    
     end process;
 
     fifos: entity xil_defaultlib.transactor_fifos

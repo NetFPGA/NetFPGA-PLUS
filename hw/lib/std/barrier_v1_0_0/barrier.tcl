@@ -59,6 +59,20 @@ set_property description ${design} [ipx::current_core]
 update_ip_catalog -rebuild 
 ipx::infer_user_parameters [ipx::current_core]
 
+ipx::add_user_parameter {NUM_PORTS} [ipx::current_core]
+set_property value_resolve_type {user} [ipx::get_user_parameters NUM_PORTS]
+set_property display_name {NUM_PORTS} [ipx::get_user_parameters NUM_PORTS]
+set_property value {2} [ipx::get_user_parameters NUM_PORTS]
+set_property value_format {long} [ipx::get_user_parameters NUM_PORTS]
+
+ipx::add_user_parameter {INACTIVITY_TIMEOUT} [ipx::current_core]
+set_property value_resolve_type {user} [ipx::get_user_parameters INACTIVITY_TIMEOUT]
+set_property display_name {INACTIVITY_TIMEOUT} [ipx::get_user_parameters INACTIVITY_TIMEOUT]
+set_property value {4000} [ipx::get_user_parameters INACTIVITY_TIMEOUT]
+set_property value_format {long} [ipx::get_user_parameters INACTIVITY_TIMEOUT]
+
+ipx::infer_user_parameters [ipx::current_core]
+
 ipx::check_integrity [ipx::current_core]
 ipx::save_core [ipx::current_core]
 update_ip_catalog

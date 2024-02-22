@@ -38,6 +38,12 @@
 //
 // @NETFPGA_LICENSE_HEADER_END@
 //
+//
+// Modified Feb 2024 Greg Watson:
+// The barrier module has 5 ports:
+//  0,1, are 100G transactors
+//  2,3 unused (were ports in SUME?)
+//  5 is DMA transactor
 
 `timescale 1ps / 100 fs
 
@@ -209,6 +215,11 @@
   wire activity_trans_sim;
   wire activity_trans_log;
   wire barrier_req_trans;
+
+  // AFAIK ports 2 and 3 are not used and so must be set to mirror one of the
+  // active ports so that the barrier logic will function correctly.
+  assign barrier_req2 = barrier_req0 | barrier_req1 | barrier_req4;
+  assign barrier_req3 = barrier_req0 | barrier_req1 | barrier_req4;
 
   //---------------------------------------------------------------------
   // Misc 
@@ -663,14 +674,14 @@
 		.barrier_proceed (barrier_proceed)
 	);
 
-	barrier_ip barrier_i (
-		.activity_stim ({activity_stim4, activity_stim3, activity_stim2, activity_stim1, activity_stim0}), 
-		.activity_rec ({activity_rec4, activity_rec3, activity_rec2, activity_rec1, activity_rec0}),
+	barrier_ip #(.NUM_PORTS(5)) barrier_i (
+		.activity_stim      ({activity_stim4, activity_stim3, activity_stim2, activity_stim1, activity_stim0}), 
+		.activity_rec       ({activity_rec4, activity_rec3, activity_rec2, activity_rec1, activity_rec0}),
 		.activity_trans_sim (activity_trans_sim),
 		.activity_trans_log (activity_trans_log),
-		.barrier_req ({barrier_req4, barrier_req3, barrier_req2, barrier_req1, barrier_req0}), 
-		.barrier_req_trans (barrier_req_trans),
-		.barrier_proceed (barrier_proceed)
+		.barrier_req        ({barrier_req4, barrier_req3, barrier_req2, barrier_req1, barrier_req0}), 
+		.barrier_req_trans  (barrier_req_trans),
+		.barrier_proceed    (barrier_proceed)
 	);
 
 endmodule

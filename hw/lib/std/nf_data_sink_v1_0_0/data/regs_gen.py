@@ -41,21 +41,21 @@ module_name='nf_data_sink'
 block_name=module_name.upper()
  
 def create_mems_list():
-  return []
+    return []
 
 def create_regs_list():
   regsDict=[
 {'reg':"ID",'type':"RO",'endian':"little", 'name':"id",'bits':"31:0",'width':"32",'addr':"32'h0",'default':"32'h0000DAD1"},
 
-{'reg':"Version",'type':"RO",'endian':"little", 'name':"version",'bits':"31:0",'width':"32",'addr':"32'h4",'default':"32'h1"},
+{'reg':"Version",'type':"RO",'endian':"little", 'name':"version",'bits':"31:0",'width':"32",'addr':"32'h4",'default':"32'h02211526"},
 
-{'reg':"Reset",'type':"WOE",'endian':"little", 'name':"reset",'bits':"15:0",'width':"16",'addr':"32'h8",'default':"16'h0"},
+{'reg':"Reset",'type':"WOE",'endian':"little", 'name':"reset",'bits':"31:0",'width':"32",'addr':"32'h8",'default':"32'h0"},
 
 {'reg':"Flip",'type':"RWA",'endian':"little", 'name':"flip",'bits':"31:0",'width':"32",'addr':"32'hC",'default':"32'h0"},
 
 {'reg':"Debug",'type':"RWA",'endian':"little", 'name':"debug",'bits':"31:0",'width':"32",'addr':"32'h10",'default':"32'h0"},
 
-{'reg':"Enable",'type':"RWA",'endian':"little", 'name':"enable",'bits':"1:0",'width':"2",'addr':"32'h14",'default':"2'b00"},
+{'reg':"Enable",'type':"RWA",'endian':"little", 'name':"enable",'bits':"31:0",'width':"32",'addr':"32'h14",'default':"32'h0"},
 
 {'reg':"PktIn",'type':"RO",'endian':"little", 'name':"pktin",'bits':"31:0",'width':"32",'addr':"32'h18",'default':"32'h0"},
 
@@ -64,6 +64,10 @@ def create_regs_list():
 {'reg':"BytesInHi",'type':"RO",'endian':"little", 'name':"bytesinhi",'bits':"31:0",'width':"32",'addr':"32'h20",'default':"32'h0"},
 
 {'reg':"Time",'type':"RO",'endian':"little", 'name':"time",'bits':"31:0",'width':"32",'addr':"32'h24",'default':"32'h0"},
+
+{'reg':"AXI_CLK",'type':"RO",'endian':"little", 'name':"axi_clk",'bits':"31:0",'width':"32",'addr':"32'h28",'default':"32'h0"},
+
+{'reg':"AXIS_CLK",'type':"RO",'endian':"little", 'name':"axis_clk",'bits':"31:0",'width':"32",'addr':"32'h2c",'default':"32'h0"},
 
 ]
   return(regsDict)

@@ -92,8 +92,8 @@ for i in range(num_normal):
     pkt.time = (((i+5)*(1e-8)) + (2e-6))
     pkta.append(pkt)
     if isHW():
-    	nftest_send_phy('nf1', pkt)
-    	nftest_expect_phy('nf0', pkt)
+        nftest_send_phy('nf1', pkt)
+        nftest_expect_phy('nf0', pkt)
 
 if not isHW():
     nftest_send_phy('nf1', pkta)

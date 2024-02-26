@@ -69,6 +69,10 @@ def create_regs_list():
 
 {'reg':"AXIS_CLK",'type':"RO",'endian':"little", 'name':"axis_clk",'bits':"31:0",'width':"32",'addr':"32'h2c",'default':"32'h0"},
 
+{'reg':"tkeep_last_lo",'type':"RO",'endian':"little", 'name':"tkeep_last_lo",'bits':"31:0",'width':"32",'addr':"32'h30",'default':"32'h0"},
+
+{'reg':"tkeep_last_hi",'type':"RO",'endian':"little", 'name':"tkeep_last_hi",'bits':"31:0",'width':"32",'addr':"32'h34",'default':"32'h0"},
+
 ]
   return(regsDict)
 #

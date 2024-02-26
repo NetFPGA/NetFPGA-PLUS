@@ -156,26 +156,7 @@ module nf_data_sink
 //   localparam IN_FIFO_DEPTH_BIT = log2(MAX_PKT_SIZE/(C_M_AXIS_DATA_WIDTH / 8));
 
   // ------------- Regs/ wires -----------
-
-  reg [C_M_AXIS_DATA_WIDTH-1:0]        in_tdata;
-  reg [((C_M_AXIS_DATA_WIDTH/8))-1:0]  in_tkeep;
-  reg [C_M_AXIS_TUSER_WIDTH-1:0]       in_tuser;
-  reg  	                              in_tvalid;
-  reg                                  in_tlast;
-
-//   wire [C_M_AXIS_TUSER_WIDTH-1:0]            fifo_out_tuser[NUM_QUEUES-1:0];
-//   wire [C_M_AXIS_DATA_WIDTH-1:0]        fifo_out_tdata[NUM_QUEUES-1:0];
-//   wire [((C_M_AXIS_DATA_WIDTH/8))-1:0]  fifo_out_tkeep[NUM_QUEUES-1:0];
-//   wire [NUM_QUEUES-1:0] 	       fifo_out_tlast;
-//   reg [NUM_QUEUES-1:0]                rd_en;
-
-//   wire [NUM_QUEUES_WIDTH-1:0]         next_queue; //next non-empty queue
-//   wire [NUM_QUEUES_WIDTH:0]       extended_next_queue; //extended non-empty queue, looking beyond the current array length
-//   reg [NUM_QUEUES_WIDTH-1:0]          cur_queue;
-//   reg [NUM_QUEUES_WIDTH-1:0]          cur_queue_next;
-
-//   reg [NUM_STATES-1:0]                state;
-//   reg [NUM_STATES-1:0]                state_next;
+  // Start axi clk domain (registers)
 
     reg   [`REG_ID_BITS]        id_reg;
     reg   [`REG_VERSION_BITS]   version_reg;
@@ -186,41 +167,49 @@ module nf_data_sink
     wire  [`REG_DEBUG_BITS]     cpu2ip_debug_reg;
     reg   [`REG_ENABLE_BITS]    ip2cpu_enable_reg;
     wire  [`REG_ENABLE_BITS]    cpu2ip_enable_reg;
-    reg   [`REG_PKTIN_BITS]     pktin_reg;
-    reg   [`REG_BYTESINLO_BITS] bytesinlo_reg;
-    reg   [`REG_BYTESINHI_BITS] bytesinhi_reg;
-    reg   [`REG_TIME_BITS]      time_reg;
     reg   [`REG_AXI_CLK_BITS]   axi_clk_reg;
-    reg   [`REG_AXIS_CLK_BITS]  axis_clk_reg;
+    reg   [`REG_TKEEP_LAST_LO_BITS] tkeep_last_lo_reg;
+    reg   [`REG_TKEEP_LAST_HI_BITS] tkeep_last_hi_reg;
 
-    reg clear_counters;
-    reg reset_registers;
-    wire unused;
-    reg enabled;
-    reg sample_reg;
-    reg sample_reg_d1;
-    wire sample;
-    assign sample = sample_reg & ~sample_reg_d1;  // rising edge sample.
-    reg [63:0] bytesin_count;
-    reg [31:0] pktin_count;
-    reg[31:0] time_count;  // counts clocks since first active SOP
-    reg[31:0] time_at_last_eop; // Time spent active. Updated ONLY at EOP.
-    reg [31:0] total_pkt_count; // EVERY EOP seen
+    reg                         active_reg_axi;
+    reg                         enabled;
+    reg                         sample_reg;
+    reg                         clear_counters;
+    reg                         reset_registers;
 
-    wire enabled_sop; 
-    wire enabled_mop;
-    wire enabled_eop;
 
-    wire [VALID_COUNT_WIDTH-1:0] number_of_last_bytes; // num bytes valid in tlast transaction.
-    assign number_of_last_bytes = in_tlast ? count_bytes_valid(in_tkeep) : 0;
+  // End axi clk domain (registers)
+  //--------------------------------------
+  // Start AXIS clk domain
 
-    reg active_reg; // 0 after enable. Goes 1 at first SOP after enabled.
-    reg in_packet;  // 1 after SOP and before EOP.
-  wire is_active;  // use this, not active_reg
+  reg [C_M_AXIS_DATA_WIDTH-1:0]        in_tdata;
+  reg [((C_M_AXIS_DATA_WIDTH/8))-1:0]  in_tkeep;
+  reg [C_M_AXIS_TUSER_WIDTH-1:0]       in_tuser;
+  reg  	                              in_tvalid;
+  reg                                  in_tlast;
 
-  // current_pkt_byte_count keeps track of number of bytes received for current packet.
-  // EOP is assumed to be true when tlast is asserted.
+  reg   [`REG_AXIS_CLK_BITS]  axis_clk_reg;
+  reg                         sample_reg_axis;
+  reg                         sample_reg_axis_d1;
+  reg                         sample_axis;
+  reg  [2:0]                  enabled_axis_v;
+
+  reg [63:0] bytesin_count;
+  reg [31:0] pktin_count;
+  reg [31:0] time_count;
+  reg        in_packet;
+  reg        active_reg;
+  reg [31:0] time_at_last_eop;
+  reg [31:0] total_pkt_count;
   reg [15:0] current_pkt_byte_count;
+  reg [((C_S_AXIS_DATA_WIDTH / 8)) - 1:0] tkeep_last;
+  reg [((C_S_AXIS_DATA_WIDTH / 8)) - 1:0] axis_tkeep_last;
+
+
+  reg   [`REG_PKTIN_BITS]     axis_pkt_in_reg;
+  reg   [`REG_BYTESINLO_BITS] axis_bytesinlo_reg;
+  reg   [`REG_BYTESINHI_BITS] axis_bytesinhi_reg;
+  reg   [`REG_TIME_BITS]      axis_time_reg;
 
   // tick counter to extend the duration of the timer without requiring
   // a new 32b reg, at the cost of some precision.
@@ -228,6 +217,26 @@ module nf_data_sink
   reg [`TICK_BITS-1:0] tick_ctr;
   wire tick_now;
   assign tick_now = tick_ctr == 3'd1;
+
+  // End AXIS clk domain
+  //--------------------------------------
+
+  wire enabled_axis;
+  assign enabled_axis = enabled_axis_v[2];
+
+  wire enabled_axis_sop; 
+  wire enabled_axis_mop;
+  wire enabled_axis_eop;
+  wire is_active_axis;  // use this, not active_reg
+
+
+  assign enabled_axis_sop = enabled_axis & in_tvalid & ~in_packet  & s_axis_2_tready;
+  assign enabled_axis_eop = enabled_axis & in_tvalid &  in_tlast   & s_axis_2_tready;
+  assign enabled_axis_mop = enabled_axis & in_tvalid & ~in_tlast   & s_axis_2_tready;
+  assign is_active_axis   = enabled_axis_sop | active_reg;
+
+  wire [VALID_COUNT_WIDTH-1:0] number_of_last_bytes; // num bytes valid in tlast transaction.
+  assign number_of_last_bytes = in_tlast ? count_bytes_valid(in_tkeep) : 0;
 
   // ------------ Modules -------------
 
@@ -242,11 +251,6 @@ module nf_data_sink
    end
 
   assign s_axis_2_tready = 1'b1; // always accept data
-
-  assign enabled_sop = enabled & in_tvalid & ~in_packet  & s_axis_2_tready;
-  assign enabled_eop = enabled & in_tvalid &  in_tlast   & s_axis_2_tready;
-  assign enabled_mop = enabled & in_tvalid & ~in_tlast   & s_axis_2_tready;
-  assign is_active   = enabled_sop | active_reg;
 
   //Registers section
   nf_data_sink_cpu_regs 
@@ -291,39 +295,69 @@ module nf_data_sink
 
     .ip2cpu_enable_reg (ip2cpu_enable_reg),
     .cpu2ip_enable_reg (cpu2ip_enable_reg),
-    .pktin_reg         (pktin_reg),
-    .bytesinlo_reg     (bytesinlo_reg),
-    .bytesinhi_reg     (bytesinhi_reg),
-    .time_reg          (time_reg),
+    .pktin_reg         (axis_pkt_in_reg),
+    .bytesinlo_reg     (axis_bytesinlo_reg),
+    .bytesinhi_reg     (axis_bytesinhi_reg),
+    .time_reg          (axis_time_reg),
+    .axi_clk_reg       (axi_clk_reg),
+    .axis_clk_reg      (axis_clk_reg),
 
     // Global Registers - user can select if to use
     .cpu_resetn_soft(),//software reset, after cpu module
     .resetn_soft    (),//software reset to cpu module (from central reset management)
     .resetn_sync    (resetn_sync)//synchronized reset, use for better timing
   );
+    //-------------------------------------------------------------------------------
+    // Start S_AXI CLock domain
+    always @( posedge S_AXI_ACLK) 
+      if (~S_AXI_ARESETN | reset_registers) begin
+        id_reg            <= #1  `REG_ID_DEFAULT;
+        version_reg       <= #1  `REG_VERSION_DEFAULT;
+
+        ip2cpu_flip_reg   <= #1  `REG_FLIP_DEFAULT;
+        ip2cpu_debug_reg  <= #1  `REG_DEBUG_DEFAULT;
+        ip2cpu_enable_reg <= {30'd0, active_reg_axi, enabled};
+        axi_clk_reg       <= 32'd0;
+        active_reg_axi    <= 1'b0;
+        enabled           <= 1'b0;
+        sample_reg        <= 1'b0;
+        clear_counters    <= 1'b1;
+        reset_registers   <= 1'b0;
+        tkeep_last_lo_reg <= 32'd0;
+        tkeep_last_hi_reg <= 32'd0;
+
+      end
+      else begin
+        ip2cpu_flip_reg   <= #1 ~cpu2ip_flip_reg;
+        ip2cpu_debug_reg  <= #1 `REG_DEBUG_DEFAULT+cpu2ip_debug_reg;
+        ip2cpu_enable_reg <= {30'd0, active_reg_axi, enabled};
+        axi_clk_reg       <= axi_clk_reg + 1;
+        active_reg_axi    <= 1'b0;
+
+        enabled           <= cpu2ip_enable_reg[0];
+        sample_reg        <= cpu2ip_enable_reg[1];
+        clear_counters    <= reset_reg[0];
+        reset_registers   <= reset_reg[4];
+        tkeep_last_lo_reg <= axis_tkeep_last[31:0];  // clock cross
+        tkeep_last_hi_reg <= axis_tkeep_last[63:32]; // clock cross
+      end
+    // end S_AXI clock domain
+    //-------------------------------------------------------------------------------
 
     //-------------------------------------------------------------------------------
     // Start axis_aclk CLock domain
     always @(posedge axis_aclk)
 
-        if (~resetn_sync | reset_registers) begin
-        id_reg            <= #1  `REG_ID_DEFAULT;
-        version_reg       <= #1  `REG_VERSION_DEFAULT;
-        ip2cpu_flip_reg   <= #1  `REG_FLIP_DEFAULT;
-        ip2cpu_debug_reg  <= #1  `REG_DEBUG_DEFAULT;
-        pktin_reg         <= #1  `REG_PKTIN_DEFAULT;
-        ip2cpu_enable_reg <= {27'd0, clear_counters, reset_registers, in_packet, active_reg, enabled};
-        pktin_reg         <= #1  `REG_PKTIN_DEFAULT;
-        bytesinlo_reg     <= #1  `REG_BYTESINLO_DEFAULT;
-        bytesinhi_reg     <= #1  `REG_BYTESINHI_DEFAULT;
-        time_reg          <= #1  `REG_TIME_DEFAULT;
+      if (~resetn_sync | reset_registers) begin
 
-        clear_counters    <= 1'b1;
-        reset_registers   <= 1'b0;
+        axis_clk_reg        <= 32'd0;
 
-        enabled          <= 1'b0;
-        sample_reg       <= 1'd0;
-        sample_reg_d1    <= 1'd0;
+        sample_reg_axis     <= 1'b0;
+        sample_reg_axis_d1  <= 1'b0;
+        sample_axis         <= 1'b0;
+
+        enabled_axis_v      <= 3'd0;
+
         bytesin_count    <= 64'd0;
         pktin_count      <= 0;
         time_count       <= 0;
@@ -332,57 +366,57 @@ module nf_data_sink
         time_at_last_eop <= 0;
         total_pkt_count  <= 0;
         current_pkt_byte_count <= 0;
-        tick_ctr         <= 0;
-        axis_clk_reg     <= 0;
 
-        end
-        else begin
-        id_reg            <= #1 `REG_ID_DEFAULT;
-        version_reg       <= #1 `REG_VERSION_DEFAULT;
-        ip2cpu_flip_reg   <= #1 ~cpu2ip_flip_reg;
-        ip2cpu_debug_reg  <= #1 `REG_DEBUG_DEFAULT+cpu2ip_debug_reg;
-        ip2cpu_enable_reg <= {27'd0, clear_counters, reset_registers, in_packet, active_reg, enabled};
+        axis_pkt_in_reg    <= 32'd0;
+        axis_bytesinlo_reg <= 32'd0;
+        axis_bytesinhi_reg <= 32'd0;
+        axis_time_reg      <= 32'd0;
 
-        enabled           <= cpu2ip_enable_reg[0];
-        sample_reg        <= cpu2ip_enable_reg[1];
-        sample_reg_d1     <= sample_reg;
-        clear_counters    <= reset_reg[0];
-        reset_registers   <= reset_reg[4];
+        tick_ctr           <= `TICK_BITS'd0;
+
+        tkeep_last      <= 64'd0;
+        axis_tkeep_last <= 64'd0;
+      end
+      else begin
+
+        axis_clk_reg           <= axis_clk_reg + 1;
+        sample_reg_axis        <= sample_reg;  // clock cross
+        sample_reg_axis_d1     <= sample_reg_axis;
+        sample_axis            <= sample_reg_axis & ~sample_reg_axis_d1;
+
+        enabled_axis_v         <= {enabled_axis_v[1:0], enabled}; // clock cross
+
+        bytesin_count <= enabled_axis_eop & is_active_axis  ? bytesin_count + current_pkt_byte_count + number_of_last_bytes : 
+                        is_active_axis                ? bytesin_count : 64'd0;
+
+        pktin_count   <= enabled_axis ? pktin_count + {31'd0, is_active_axis  & enabled_axis_eop} : 0;
+        time_count    <= (is_active_axis | enabled_axis_sop) ? time_count + tick_now : enabled_axis ? time_count : 0;
 
         // do not go active in the middle of a packet - wait until end of current packet.
-        in_packet  <= (enabled_sop & ~enabled_eop)  | (in_packet & ~enabled_eop);
-        active_reg <= enabled & (active_reg | is_active);
+        in_packet  <= (enabled_axis_sop & ~enabled_axis_eop)  | (in_packet & ~enabled_axis_eop);
+        active_reg <= enabled_axis & (active_reg | is_active_axis);
 
+        time_at_last_eop <= (enabled_axis_eop & is_active_axis) ? time_count :
+                            enabled_axis ? time_at_last_eop : 0;
         total_pkt_count <= total_pkt_count + {31'd0, in_tvalid &  in_tlast & s_axis_2_tready};
 
-        tick_ctr         <= tick_ctr + `TICK_BITS'd1;
-        // counters count when enabled.
+        current_pkt_byte_count <= enabled_axis_eop ? 0 :
+                                    enabled_axis_mop ? (current_pkt_byte_count + TKEEP_WIDTH) :
+                                    enabled_axis     ? current_pkt_byte_count : 0;
 
-        current_pkt_byte_count <= enabled_eop ? 0 :
-                                    enabled_mop ? (current_pkt_byte_count + TKEEP_WIDTH) :
-                                    enabled     ? current_pkt_byte_count : 0;
+        axis_pkt_in_reg    <= sample_axis & is_active_axis  ? pktin_count          : is_active_axis  ? axis_pkt_in_reg : 0;
+        axis_bytesinlo_reg <= sample_axis & is_active_axis  ? bytesin_count[31:0]  : is_active_axis  ? axis_bytesinlo_reg : 0;
+        axis_bytesinhi_reg <= sample_axis & is_active_axis  ? bytesin_count[63:32] : is_active_axis  ? axis_bytesinhi_reg : 0;
+        axis_time_reg      <= sample_axis & is_active_axis  ? time_at_last_eop     : is_active_axis  ? axis_time_reg : 0;
 
-        pktin_count   <= enabled ? pktin_count + {31'd0, is_active  & enabled_eop} : 0;
-        bytesin_count <= enabled_eop & is_active  ? bytesin_count + current_pkt_byte_count + number_of_last_bytes : 
-                        is_active                ? bytesin_count : 64'd0;
-        time_count    <= (is_active | enabled_sop) ? time_count + tick_now : enabled ? time_count : 0;
+        tick_ctr           <= tick_ctr + `TICK_BITS'd1;
 
-        time_at_last_eop <= (enabled_eop & is_active) ? time_count :
-                            enabled ? time_at_last_eop : 0;
-
-        pktin_reg     <= sample & is_active  ? pktin_count          : is_active  ? pktin_reg : 0;
-        bytesinlo_reg <= sample & is_active  ? bytesin_count[31:0]  : is_active  ? bytesinlo_reg : 0;
-        bytesinhi_reg <= sample & is_active  ? bytesin_count[63:32] : is_active  ? bytesinhi_reg : 0;
-        time_reg      <= sample & is_active  ? time_at_last_eop     : is_active  ? time_reg : 0;
-        axis_clk_reg  <= axis_clk_reg + 1;
-
-        end
+        tkeep_last <= (enabled_axis & in_tlast) ? in_tkeep : tkeep_last;
+        axis_tkeep_last <= sample_axis & is_active_axis  ? tkeep_last : axis_tkeep_last;
+      end
 
     // end axis_aclk clock domain
     //-------------------------------------------------------------------------------
-    // Start S_AXI CLock domain
-    always @( posedge S_AXI_ACLK) axi_clk_reg <= S_AXI_ARESETN ? axi_clk_reg + 1 : 0;
-    // end S_AXI clock domain
 
 
 endmodule

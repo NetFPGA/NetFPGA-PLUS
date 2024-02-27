@@ -64,6 +64,7 @@ int ps_disable_ds(char *ifnam);
 int ps_sample_ds(char *ifnam);
 int ps_get_sample_ds(char *ifnam, ds_sample_t *sample_data);
 int ps_send_pkt_socket(char *ifnam, uint32_t num_bytes);
+int ps_get_tkeep_ds(char *ifnam, uint64_t *tkeep);
 
 
 #endif

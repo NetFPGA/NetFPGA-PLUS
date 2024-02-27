@@ -68,11 +68,13 @@ int main(int argc, char *argv[])
 	char *ifnam;
 	int rc;
 	uint32_t pkt_len; // without CRC
+	uint32_t num_to_send;
 	ds_sample_t sampled_regs;
 
 	pkt_len = 60;
+	num_to_send = 1;
 	ifnam = "nf0";//NFPLUS_IFNAM_DEFAULT;
-	while ((rc = getopt(argc, argv, "b:dhz")) != -1) {
+	while ((rc = getopt(argc, argv, "b:n:dhz")) != -1) {
 		switch (rc) {
 		case 'b':
 			pkt_len = strtoul(optarg, NULL, 0);
@@ -82,6 +84,11 @@ int main(int argc, char *argv[])
 		case 'd':
 			debug = 1;
 			printf("DEBUG set to 1\n");
+			break;
+		case 'n':
+			num_to_send = strtoul(optarg, NULL, 0);
+			if (num_to_send < 1)
+				errx(1, "Invalid packet length. Must be >= 1");
 			break;
 		case 'z':
 			mode = MODE_GET_CLOCKS;
@@ -124,10 +131,10 @@ int main(int argc, char *argv[])
 		// Enable collection
 		if ((rc = ps_enable_ds(ifnam))) err(rc, "Unable to enable datasink module");
 
-		// Send packet
-		if ((rc = ps_send_pkt_socket(ifnam, pkt_len))) err(rc, "Unable to send packet");
-
-		sleep(1);
+		// Send packets
+		for (int i=0; i < num_to_send; i++) {
+			if ((rc = ps_send_pkt_socket(ifnam, pkt_len))) err(rc, "Unable to send packet");
+		}
 
 		// Sample registers
 		if ((rc = ps_sample_ds(ifnam ))) err(rc, "Unable to issue sample command to data_sink module.");

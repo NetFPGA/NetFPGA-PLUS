@@ -126,6 +126,24 @@ int ps_get_sample_ds(char *ifnam, ds_sample_t *sample_data) {
     return rc;
 }
 
+int ps_get_tkeep_ds(char *ifnam, uint64_t *tkeep) {
+    int rc;
+    uint32_t i32;
+	rc = read_register  (ifnam, 
+						(uint32_t)(NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_TKEEP_LAST_LO_0_OFFSET), 
+						&i32
+						);
+	*tkeep = (uint64_t) i32;
+    if (rc == 0) {
+        rc = read_register  (ifnam, 
+                            (uint32_t)(NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_TKEEP_LAST_HI_0_OFFSET), 
+                            &i32
+                            );
+        *tkeep |= ((uint64_t) i32) << 32;
+    };
+	return rc;
+}
+
 // 4 bytes of CRC32 will be added to num_bytes user data.
 // Try https://gist.github.com/austinmarton/1922600
 int ps_send_pkt_socket(char *ifnam, uint32_t num_bytes) {

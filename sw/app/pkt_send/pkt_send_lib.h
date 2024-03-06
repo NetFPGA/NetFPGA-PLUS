@@ -63,8 +63,11 @@ int ps_enable_ds(char *ifnam);
 int ps_disable_ds(char *ifnam);
 int ps_sample_ds(char *ifnam);
 int ps_get_sample_ds(char *ifnam, ds_sample_t *sample_data);
-int ps_send_pkt_socket(char *ifnam, uint32_t num_bytes);
+int ps_compute_freqs_Hz(char *ifnam, float *axi_Hz, float *axis_Hz);
+int ps_build_raw_packet(char *ifnam, int sockfd, char *sendbuf, struct sockaddr_ll *socket_address, uint32_t num_bytes);
+int ps_send_pkt_socket(char *ifnam, uint32_t num_bytes, uint32_t num_to_send);
 int ps_get_tkeep_ds(char *ifnam, uint64_t *tkeep);
+float ps_compute_performance_bps(float axis_Hz, ds_sample_t *sampled_regs);
 
 
 #endif

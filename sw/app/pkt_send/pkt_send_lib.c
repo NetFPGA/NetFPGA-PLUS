@@ -143,27 +143,30 @@ int ps_get_tkeep_ds(char *ifnam, uint64_t *tkeep) {
     };
 	return rc;
 }
+int ps_compute_freqs_Hz(char *ifnam, float *axi_Hz, float *axis_Hz){
+		uint32_t axi_clk_freq [2];
+		uint32_t axis_clk_freq[2];
+		int rc;
+		if ((rc = read_register (ifnam, NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_AXI_CLK_0_OFFSET, &axi_clk_freq[0])))
+			err(rc,"Unable to get axi clock count values from registers");
+		if ((rc = read_register (ifnam, NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_AXIS_CLK_0_OFFSET, &axis_clk_freq[0])))
+			err(rc,"Unable to get axis clock count values from registers");
+		sleep(1);
+		if ((rc = read_register (ifnam, NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_AXI_CLK_0_OFFSET, &axi_clk_freq[1])))
+			err(rc,"Unable to get axi clock count values from registers");
+		if ((rc = read_register (ifnam, NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_AXIS_CLK_0_OFFSET, &axis_clk_freq[1])))
+			err(rc,"Unable to get axis clock count values from registers");
+        *axi_Hz =  (float)(axi_clk_freq[1] -axi_clk_freq[0]);
+        *axis_Hz = (float)(axis_clk_freq[1]-axis_clk_freq[0]);
+        return 0;
+};
 
-// 4 bytes of CRC32 will be added to num_bytes user data.
-// Try https://gist.github.com/austinmarton/1922600
-int ps_send_pkt_socket(char *ifnam, uint32_t num_bytes) {
-	int sockfd;
+// Create packet, populating DA, SA, Ethtype and data. 
+// Also populate socket_address though not used for raw.
+int ps_build_raw_packet(char *ifnam, int sockfd, char *sendbuf, struct sockaddr_ll *socket_address, uint32_t num_bytes) {
 	struct ifreq if_idx;
 	struct ifreq if_mac;
-	char sendbuf[BUFSIZ];
 	int tx_len = 0;
-	struct sockaddr_ll socket_address;
-
-	if (num_bytes < 60 || num_bytes > ETH_FRAME_LEN) {
-		fprintf(stderr,"ERROR: ps_send_pkt_socket: packet length must >= 60 and <= ETH_FRAME_LEN (1514)");
-		return 1;
-	}
-    if (debug) fprintf(stderr,"INFO:ps_send_pkt_socket %s. pkt size: %0d bytes.\n", ifnam, num_bytes);
-
-	/* Open RAW socket to send on */
-	if ((sockfd = socket(AF_PACKET, SOCK_RAW, IPPROTO_RAW)) == -1) {
-	    perror("socket");
-	}
 
 	/* Get the index of the interface to send on */
 	memset(&if_idx, 0, sizeof(struct ifreq));
@@ -178,19 +181,20 @@ int ps_send_pkt_socket(char *ifnam, uint32_t num_bytes) {
 
 	/* Construct the Ethernet header */
 	memset(sendbuf, 0, BUFSIZ);
-	/* Ethernet header */
-	sendbuf[0] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[0];
-	sendbuf[1] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[1];
-	sendbuf[2] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[2];
-	sendbuf[3] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[3];
-	sendbuf[4] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[4];
-	sendbuf[5] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[5];
-	sendbuf[6] = 0;
-	sendbuf[7] = 0;
-	sendbuf[8] = 0;
-	sendbuf[9] = 0;
-	sendbuf[10] = 0;
-	sendbuf[11] = 0;
+	/* Ethernet header - DA */
+	sendbuf[0] = 0;
+	sendbuf[1] = 1;
+	sendbuf[2] = 2;
+	sendbuf[3] = 3;
+	sendbuf[4] = 4;
+	sendbuf[5] = 0;
+	/* Ethernet header - SA */
+	sendbuf[6] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[0];
+	sendbuf[7] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[1];
+	sendbuf[8] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[2];
+	sendbuf[9] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[3];
+	sendbuf[10] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[4];
+	sendbuf[11] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[5];
 	/* Ethertype field */
 	sendbuf[12] = htons(ETH_P_IP) >> 8;
 	sendbuf[13] = htons(ETH_P_IP) & 0xff;
@@ -204,21 +208,64 @@ int ps_send_pkt_socket(char *ifnam, uint32_t num_bytes) {
     while (tx_len < num_bytes) sendbuf[tx_len++] = 0xdd;
 
     /* Index of the network device */
-	socket_address.sll_ifindex = if_idx.ifr_ifindex;
+	socket_address->sll_ifindex = if_idx.ifr_ifindex;
 	/* Address length*/
-	socket_address.sll_halen = ETH_ALEN;
-	/* Destination MAC */
-	socket_address.sll_addr[0] = 0;
-	socket_address.sll_addr[1] = 0;
-	socket_address.sll_addr[2] = 0;
-	socket_address.sll_addr[3] = 0;
-	socket_address.sll_addr[4] = 0;
-	socket_address.sll_addr[5] = 0;
+	socket_address->sll_halen = ETH_ALEN;
+	/* Destination MAC - should be irrelevant as RAW should just send the sendbuf as raw packet*/
+	socket_address->sll_addr[0] = 0;
+	socket_address->sll_addr[1] = 1;
+	socket_address->sll_addr[2] = 2;
+	socket_address->sll_addr[3] = 3;
+	socket_address->sll_addr[4] = 4;
+	socket_address->sll_addr[5] = 0;
 
-	/* Send packet */
-	if (sendto(sockfd, sendbuf, tx_len, 0, (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll)) < 0)
-	    printf("Send failed\n");
+	return 0;
+}
+
+
+// Send <num_to_send> packets of size <num_bytes> + 4 bytes.
+// (4 bytes of CRC32 will be added to num_bytes user data.)
+int ps_send_pkt_socket(char *ifnam, uint32_t num_bytes, uint32_t num_to_send) {
+	int sockfd;
+	char sendbuf[BUFSIZ];
+	struct sockaddr_ll socket_address;
+	int rc;
+
+	if (num_bytes < 60 || num_bytes > ETH_FRAME_LEN) {
+		fprintf(stderr,"ERROR: ps_send_pkt_socket: packet length must >= 60 and <= ETH_FRAME_LEN (1514)");
+		return 1;
+	}
+	if (num_to_send < 1) {
+		fprintf(stderr,"ERROR: ps_send_pkt_socket: number of pkts to send must be 1 or more.");
+		return 1;
+	}
+    if (debug) fprintf(stderr,"INFO:ps_send_pkt_socket %s. pkt size: %0d bytes.\n", ifnam, num_bytes);
+
+	/* Open RAW socket to send on */
+	if ((sockfd = socket(AF_PACKET, SOCK_RAW, IPPROTO_RAW)) == -1) {
+	    perror("socket");
+	}
+
+	/* Build the raw packet that will be sent many times */
+	if ((rc = ps_build_raw_packet(ifnam, sockfd, sendbuf, &socket_address, num_bytes))) 
+		err(rc, "Error creating raw packet.");
+
+	/* Send packets. sendto is blocking */
+    for (uint32_t i=0; i < num_to_send; i++)
+    	if (sendto(sockfd, sendbuf, num_bytes, 0, (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll)) < 0) {
+	        printf("Send failed\n");
+            return 1;
+        }
 
     close(sockfd);
     return 0;
+}
+
+// Compute performance in bits per second
+float ps_compute_performance_bps(float axis_Hz, ds_sample_t *sampled_regs) {
+	float time_secs;
+	float bits_sent;
+	time_secs = sampled_regs->num_ds_periods / axis_Hz;
+	bits_sent = (float)(sampled_regs->num_bytes * 8);
+	return bits_sent / time_secs;
 }

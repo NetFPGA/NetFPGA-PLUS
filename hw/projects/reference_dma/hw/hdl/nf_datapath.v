@@ -166,73 +166,78 @@ module nf_datapath #(
 
     );
     
-  // tie off unused output connections to CMAC
-  assign s_axis_0_tready = 1'b0;
-  assign s_axis_1_tready = 1'b0;
+    // tie off unused output connections to CMAC
+    assign s_axis_0_tready = 1'b0;
+    assign s_axis_1_tready = 1'b0;
 
-  assign m_axis_0_tdata = 0;
-  assign m_axis_0_tkeep = 0;
-  assign m_axis_0_tuser = 0;
-  assign m_axis_0_tlast = 1'b0;
-  assign m_axis_1_tdata = 0;
-  assign m_axis_1_tkeep = 0;
-  assign m_axis_1_tuser = 0;
-  assign m_axis_1_tlast = 1'b0;
+    assign m_axis_0_tdata = 0;
+    assign m_axis_0_tkeep = 0;
+    assign m_axis_0_tuser = 0;
+    assign m_axis_0_tlast = 1'b0;
+    assign m_axis_1_tdata = 0;
+    assign m_axis_1_tkeep = 0;
+    assign m_axis_1_tuser = 0;
+    assign m_axis_1_tlast = 1'b0;
 
-  // not using S1_AXI or S2_AXI register interfaces at the moment.
-  assign S1_AXI_ARREADY = 1'b0;
-  assign S1_AXI_RDATA   = 0;
-  assign S1_AXI_RRESP   = 1'b0;
-  assign S1_AXI_RVALID  = 1'b0;
-  assign S1_AXI_WREADY  = 1'b0;
-  assign S1_AXI_BRESP   = 1'b0;
-  assign S1_AXI_BVALID  = 1'b0;
-  assign S1_AXI_AWREADY = 1'b0;
-  assign S2_AXI_ARREADY = 1'b0;
-  assign S2_AXI_RDATA   = 0;
-  assign S2_AXI_RRESP   = 1'b0;
-  assign S2_AXI_RVALID  = 1'b0;
-  assign S2_AXI_WREADY  = 1'b0;
-  assign S2_AXI_BRESP   = 1'b0;
-  assign S2_AXI_BVALID  = 1'b0;
-  assign S2_AXI_AWREADY = 1'b0;
-  
-  // temporarirly tie off m_axis until we code up the outbound DMA side.
-  assign m_axis_2_tdata = 0;
-  assign m_axis_2_tkeep = 0;
-  assign m_axis_2_tuser = 0;
-  assign m_axis_2_tlast = 1'b0;
+    // not using S1_AXI or S2_AXI register interfaces at the moment.
+    assign S1_AXI_ARREADY = 1'b0;
+    assign S1_AXI_RDATA   = 0;
+    assign S1_AXI_RRESP   = 1'b0;
+    assign S1_AXI_RVALID  = 1'b0;
+    assign S1_AXI_WREADY  = 1'b0;
+    assign S1_AXI_BRESP   = 1'b0;
+    assign S1_AXI_BVALID  = 1'b0;
+    assign S1_AXI_AWREADY = 1'b0;
+    assign S2_AXI_ARREADY = 1'b0;
+    assign S2_AXI_RDATA   = 0;
+    assign S2_AXI_RRESP   = 1'b0;
+    assign S2_AXI_RVALID  = 1'b0;
+    assign S2_AXI_WREADY  = 1'b0;
+    assign S2_AXI_BRESP   = 1'b0;
+    assign S2_AXI_BVALID  = 1'b0;
+    assign S2_AXI_AWREADY = 1'b0;
+
+    // temporarirly tie off m_axis until we code up the outbound DMA side.
+    assign m_axis_2_tdata = 0;
+    assign m_axis_2_tkeep = 0;
+    assign m_axis_2_tuser = 0;
+    assign m_axis_2_tlast = 1'b0;
 
   // Data sink (data from DMA)
-  nf_data_sink nf_data_sink_v1_0 (
-      .axis_aclk(axis_aclk), 
-      .axis_resetn(axis_resetn), 
-      .s_axis_2_tdata (s_axis_2_tdata), 
-      .s_axis_2_tkeep (s_axis_2_tkeep), 
-      .s_axis_2_tuser (s_axis_2_tuser), 
-      .s_axis_2_tvalid(s_axis_2_tvalid), 
-      .s_axis_2_tready(s_axis_2_tready), 
-      .s_axis_2_tlast (s_axis_2_tlast), 
-      .S_AXI_AWADDR(S0_AXI_AWADDR), 
-      .S_AXI_AWVALID(S0_AXI_AWVALID),
-      .S_AXI_WDATA(S0_AXI_WDATA),  
-      .S_AXI_WSTRB(S0_AXI_WSTRB),  
-      .S_AXI_WVALID(S0_AXI_WVALID), 
-      .S_AXI_BREADY(S0_AXI_BREADY), 
-      .S_AXI_ARADDR(S0_AXI_ARADDR), 
-      .S_AXI_ARVALID(S0_AXI_ARVALID),
-      .S_AXI_RREADY(S0_AXI_RREADY), 
-      .S_AXI_ARREADY(S0_AXI_ARREADY),
-      .S_AXI_RDATA(S0_AXI_RDATA),  
-      .S_AXI_RRESP(S0_AXI_RRESP),  
-      .S_AXI_RVALID(S0_AXI_RVALID), 
-      .S_AXI_WREADY(S0_AXI_WREADY), 
-      .S_AXI_BRESP(S0_AXI_BRESP),  
-      .S_AXI_BVALID(S0_AXI_BVALID), 
-      .S_AXI_AWREADY(S0_AXI_AWREADY),
-      .S_AXI_ACLK (axi_aclk), 
-      .S_AXI_ARESETN(axi_resetn)
-    );
+    nf_data_sink 
+    #(
+        .C_M_AXIS_DATA_WIDTH (C_M_AXIS_DATA_WIDTH),
+        .C_S_AXIS_DATA_WIDTH (C_S_AXIS_DATA_WIDTH)
+    )  nf_data_sink_v1_0
+    (
+    .axis_aclk(axis_aclk), 
+    .axis_resetn(axis_resetn), 
+    .s_axis_2_tdata (s_axis_2_tdata), 
+    .s_axis_2_tkeep (s_axis_2_tkeep), 
+    .s_axis_2_tuser (s_axis_2_tuser), 
+    .s_axis_2_tvalid(s_axis_2_tvalid), 
+    .s_axis_2_tready(s_axis_2_tready), 
+    .s_axis_2_tlast (s_axis_2_tlast), 
+    .S_AXI_AWADDR(S0_AXI_AWADDR), 
+    .S_AXI_AWVALID(S0_AXI_AWVALID),
+    .S_AXI_WDATA(S0_AXI_WDATA),  
+    .S_AXI_WSTRB(S0_AXI_WSTRB),  
+    .S_AXI_WVALID(S0_AXI_WVALID), 
+    .S_AXI_BREADY(S0_AXI_BREADY), 
+    .S_AXI_ARADDR(S0_AXI_ARADDR), 
+    .S_AXI_ARVALID(S0_AXI_ARVALID),
+    .S_AXI_RREADY(S0_AXI_RREADY), 
+    .S_AXI_ARREADY(S0_AXI_ARREADY),
+    .S_AXI_RDATA(S0_AXI_RDATA),  
+    .S_AXI_RRESP(S0_AXI_RRESP),  
+    .S_AXI_RVALID(S0_AXI_RVALID), 
+    .S_AXI_WREADY(S0_AXI_WREADY), 
+    .S_AXI_BRESP(S0_AXI_BRESP),  
+    .S_AXI_BVALID(S0_AXI_BVALID), 
+    .S_AXI_AWREADY(S0_AXI_AWREADY),
+    .S_AXI_ACLK (axi_aclk), 
+    .S_AXI_ARESETN(axi_resetn)
+);
     
     
     

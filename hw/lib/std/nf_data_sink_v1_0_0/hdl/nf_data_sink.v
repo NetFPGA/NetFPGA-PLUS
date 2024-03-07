@@ -58,8 +58,8 @@
 module nf_data_sink
 #(
     // Master AXI Stream Data Width
-    parameter C_M_AXIS_DATA_WIDTH=512,
-    parameter C_S_AXIS_DATA_WIDTH=512,
+    parameter C_M_AXIS_DATA_WIDTH=1024,
+    parameter C_S_AXIS_DATA_WIDTH=1024,
     parameter C_M_AXIS_TUSER_WIDTH=128,
     parameter C_S_AXIS_TUSER_WIDTH=128,
     parameter NUM_QUEUES=1,
@@ -131,17 +131,31 @@ module nf_data_sink
   localparam TKEEP_WIDTH = C_S_AXIS_DATA_WIDTH / 8;
   localparam VALID_COUNT_WIDTH = log2(TKEEP_WIDTH) + 1;
 
-  function [VALID_COUNT_WIDTH-1:0] count_bytes_valid;
-    input [TKEEP_WIDTH-1:0] valid_vector;
+  function [6:0] count_bytes_valid_64;
+    input [63:0] valid_vector_64;
     integer i;
     begin
-      count_bytes_valid = 0;
-      for (i = 0 ; i < TKEEP_WIDTH; i = i + 1)
+      count_bytes_valid_64 = 0;
+      for (i = 0 ; i < 64; i = i + 1)
       begin
-        count_bytes_valid = count_bytes_valid + valid_vector[i];
+        count_bytes_valid_64 = count_bytes_valid_64 + valid_vector_64[i];
       end
     end
-  endfunction // count_bytes_valid
+  endfunction // count_bytes_valid_64
+
+  // XOR all the data into a 32 bit value
+  function [7:0] tdata_xor;
+    input [C_S_AXIS_DATA_WIDTH - 1:0] tdata;
+    input [TKEEP_WIDTH-1:0] tkeep;
+    integer i;
+    begin
+      tdata_xor = 0;
+      for (i = 0 ; i < TKEEP_WIDTH; i = i + 1)
+      begin
+        tdata_xor = tdata_xor ^ (tkeep[i] ? tdata[i*8 +: 8] : 0);
+      end
+    end
+  endfunction // tdata_xor
 
 // ------------ Internal Params --------
 
@@ -185,8 +199,12 @@ module nf_data_sink
   reg [C_M_AXIS_DATA_WIDTH-1:0]        in_tdata;
   reg [((C_M_AXIS_DATA_WIDTH/8))-1:0]  in_tkeep;
   reg [C_M_AXIS_TUSER_WIDTH-1:0]       in_tuser;
-  reg  	                              in_tvalid;
+  reg  	                               in_tvalid;
   reg                                  in_tlast;
+
+  // Do something with data to prevent logic erasure.
+  reg [7:0]                            in_tdata_xor1;
+  reg [7:0]                            in_tdata_xor2;
 
   reg   [`REG_AXIS_CLK_BITS]  axis_clk_reg;
   reg                         sample_reg_axis;
@@ -236,7 +254,9 @@ module nf_data_sink
   assign is_active_axis   = enabled_axis_sop | active_reg;
 
   wire [VALID_COUNT_WIDTH-1:0] number_of_last_bytes; // num bytes valid in tlast transaction.
-  assign number_of_last_bytes = in_tlast ? count_bytes_valid(in_tkeep) : 0;
+  assign number_of_last_bytes = in_tlast ? count_bytes_valid_64(in_tkeep[63:0]) + 
+                                           count_bytes_valid_64(in_tkeep[127:64]) 
+                                         : 0;
 
   // ------------ Modules -------------
 
@@ -248,6 +268,9 @@ module nf_data_sink
       in_tuser       <= s_axis_2_tuser;
       in_tvalid      <= s_axis_2_tvalid;
       in_tlast       <= s_axis_2_tlast;
+
+      in_tdata_xor1 <= tdata_xor(in_tdata, in_tkeep);
+      in_tdata_xor2 <= in_tdata_xor1;
    end
 
   assign s_axis_2_tready = 1'b1; // always accept data
@@ -301,6 +324,8 @@ module nf_data_sink
     .time_reg          (axis_time_reg),
     .axi_clk_reg       (axi_clk_reg),
     .axis_clk_reg      (axis_clk_reg),
+    .tkeep_last_lo_reg (tkeep_last_lo_reg),
+    .tkeep_last_hi_reg (tkeep_last_hi_reg),
 
     // Global Registers - user can select if to use
     .cpu_resetn_soft(),//software reset, after cpu module
@@ -316,7 +341,7 @@ module nf_data_sink
 
         ip2cpu_flip_reg   <= #1  `REG_FLIP_DEFAULT;
         ip2cpu_debug_reg  <= #1  `REG_DEBUG_DEFAULT;
-        ip2cpu_enable_reg <= {30'd0, active_reg_axi, enabled};
+        ip2cpu_enable_reg <= 32'd0;
         axi_clk_reg       <= 32'd0;
         active_reg_axi    <= 1'b0;
         enabled           <= 1'b0;
@@ -330,7 +355,7 @@ module nf_data_sink
       else begin
         ip2cpu_flip_reg   <= #1 ~cpu2ip_flip_reg;
         ip2cpu_debug_reg  <= #1 `REG_DEBUG_DEFAULT+cpu2ip_debug_reg;
-        ip2cpu_enable_reg <= {30'd0, active_reg_axi, enabled};
+        ip2cpu_enable_reg <= {in_tdata_xor2, 22'd0, active_reg_axi, enabled};
         axi_clk_reg       <= axi_clk_reg + 1;
         active_reg_axi    <= 1'b0;
 
@@ -350,32 +375,27 @@ module nf_data_sink
 
       if (~resetn_sync | reset_registers) begin
 
-        axis_clk_reg        <= 32'd0;
-
-        sample_reg_axis     <= 1'b0;
-        sample_reg_axis_d1  <= 1'b0;
-        sample_axis         <= 1'b0;
-
-        enabled_axis_v      <= 3'd0;
-
-        bytesin_count    <= 64'd0;
-        pktin_count      <= 0;
-        time_count       <= 0;
-        in_packet        <= 1'b0;
-        active_reg       <= 1'b0;
-        time_at_last_eop <= 0;
-        total_pkt_count  <= 0;
+        axis_clk_reg           <= 32'd0;
+        sample_reg_axis        <= 1'b0;
+        sample_reg_axis_d1     <= 1'b0;
+        sample_axis            <= 1'b0;
+        enabled_axis_v         <= 3'd0;
+        bytesin_count          <= 64'd0;
+        pktin_count            <= 0;
+        time_count             <= 0;
+        in_packet              <= 1'b0;
+        active_reg             <= 1'b0;
+        time_at_last_eop       <= 0;
+        total_pkt_count        <= 0;
         current_pkt_byte_count <= 0;
+        axis_pkt_in_reg        <= 32'd0;
+        axis_bytesinlo_reg     <= 32'd0;
+        axis_bytesinhi_reg     <= 32'd0;
+        axis_time_reg          <= 32'd0;
+        tick_ctr               <= `TICK_BITS'd0;
+        tkeep_last             <= 64'd0;
+        axis_tkeep_last        <= 64'd0;
 
-        axis_pkt_in_reg    <= 32'd0;
-        axis_bytesinlo_reg <= 32'd0;
-        axis_bytesinhi_reg <= 32'd0;
-        axis_time_reg      <= 32'd0;
-
-        tick_ctr           <= `TICK_BITS'd0;
-
-        tkeep_last      <= 64'd0;
-        axis_tkeep_last <= 64'd0;
       end
       else begin
 

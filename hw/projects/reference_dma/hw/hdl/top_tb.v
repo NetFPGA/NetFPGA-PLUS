@@ -42,6 +42,7 @@
   parameter          PL_SIM_FAST_LINK_TRAINING           = "TRUE",      // Simulation Speedup
   parameter          C_DATA_WIDTH                        = 512,         // RX/TX interface data width
   parameter          KEEP_WIDTH                          = C_DATA_WIDTH / 32,
+  parameter          C_NF_DATA_WIDTH                     = 1024,         // RX/TX interface data width
   parameter  integer USER_CLK2_FREQ                 = 4,
   parameter          REF_CLK_FREQ                   = 0,           // 0 - 100 MHz, 1 - 125 MHz,  2 - 250 MHz
   parameter          AXISTEN_IF_RQ_ALIGNMENT_MODE   = "FALSE",
@@ -95,6 +96,7 @@
     .PL_SIM_FAST_LINK_TRAINING       (PL_SIM_FAST_LINK_TRAINING        ),
     .C_DATA_WIDTH                    (C_DATA_WIDTH                     ),
     .KEEP_WIDTH                      (KEEP_WIDTH                       ),
+    .C_NF_DATA_WIDTH                 (C_NF_DATA_WIDTH                  ),
     .USER_CLK2_FREQ                  (USER_CLK2_FREQ                   ),
     .REF_CLK_FREQ                    (REF_CLK_FREQ                     ),
     .AXISTEN_IF_RQ_ALIGNMENT_MODE    (AXISTEN_IF_RQ_ALIGNMENT_MODE     ),

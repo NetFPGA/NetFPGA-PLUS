@@ -52,7 +52,8 @@
 
 #define MODE_SEND_PACKETS 1
 #define MODE_GET_CLOCKS 2
-#define MODE_SIZE_RANGE_REPORT 4
+#define MODE_SIZE_RANGE_REPORT_NUM_PKTS 4
+#define MODE_SIZE_RANGE_REPORT_NUM_MBYTES 8
 
 #define PERF_LOOPS 3
 
@@ -67,8 +68,9 @@ usage(const char *progname)
 	printf("\t-b : Specify the number of bytes in packet (length) 60-1514. 4 bytes extra will be added as CRC.\n");
 	printf("\t-i : Specify the interface. Default is 'nf0'. See ifconfig.\n");
 	printf("\t-n : Specify the number of packets to send for each test.\n");
-	printf("\t-r : Report mode: measures performance over a range of packet sizes.\n");
-	printf("\t     Specify number of packets per test.\n");
+	printf("\t-R,-r : Report mode: measures performance over a range of packet sizes.\n");
+	printf("\t   -R : Specify number of Mbytes to send for each packet size.\n");
+	printf("\t   -r : Specify number of packets to send for each packet size.\n");
 	printf("\t-z : Measure AXI and AXIS clocks and report their frequencies.\n");
 	exit(1);
 }
@@ -79,6 +81,7 @@ int main(int argc, char *argv[])
 	int rc;
 	uint32_t pkt_len; // without CRC
 	uint32_t num_to_send;
+	uint32_t mbytes_to_send;
 	ds_sample_t sampled_regs;
 	float axi_Hz, axis_Hz;
 	float perf_Mbps;
@@ -86,7 +89,7 @@ int main(int argc, char *argv[])
 	pkt_len = 60;
 	num_to_send = 1;
 	ifnam = "nf0";//NFPLUS_IFNAM_DEFAULT;
-	while ((rc = getopt(argc, argv, "b:i:n:r:dhz")) != -1) {
+	while ((rc = getopt(argc, argv, "b:i:n:r:R:dhz")) != -1) {
 		switch (rc) {
 		case 'b':
 			pkt_len = strtoul(optarg, NULL, 0);
@@ -100,8 +103,15 @@ int main(int argc, char *argv[])
 		case 'i':
 			ifnam = optarg;
 			break;
-		case 'r': // report performance over packet size range
-			mode |= MODE_SIZE_RANGE_REPORT;
+		case 'R': // report performance over packet size range. COnst data
+			mode |= MODE_SIZE_RANGE_REPORT_NUM_MBYTES;
+			mode &= ~MODE_SEND_PACKETS;
+			mbytes_to_send = strtoul(optarg, NULL, 0);
+			if (mbytes_to_send < 1)
+				errx(1, "Invalid number of Mbytes to send - must be >= 1");
+			break;
+		case 'r': // report performance over packet size range. Const num pkts
+			mode |= MODE_SIZE_RANGE_REPORT_NUM_PKTS;
 			mode &= ~MODE_SEND_PACKETS;
 		case 'n':
 			num_to_send = strtoul(optarg, NULL, 0);
@@ -132,7 +142,7 @@ int main(int argc, char *argv[])
 	}
 
 
-	if (mode & MODE_SEND_PACKETS) {
+	if (mode & (MODE_SIZE_RANGE_REPORT_NUM_PKTS | MODE_SIZE_RANGE_REPORT_NUM_MBYTES | MODE_SEND_PACKETS)) {
 
 		// Enable collection
 		if ((rc = ps_enable_ds(ifnam))) err(rc, "Unable to enable datasink module");
@@ -156,13 +166,17 @@ int main(int argc, char *argv[])
 	}
 
 
-	if (mode & MODE_SIZE_RANGE_REPORT) {
+	if (mode & (MODE_SIZE_RANGE_REPORT_NUM_MBYTES|MODE_SIZE_RANGE_REPORT_NUM_PKTS)) {
 
 		uint32_t pkt_len = 60;
 
 		while (pkt_len <= ETH_FRAME_LEN) {
 
 			perf_Mbps = 0.0;
+
+			if (mode & MODE_SIZE_RANGE_REPORT_NUM_MBYTES) {
+				num_to_send = mbytes_to_send*1024*1024/pkt_len;
+			}
 
 			for (int avg_loop = 0; avg_loop < PERF_LOOPS; avg_loop++) {
 

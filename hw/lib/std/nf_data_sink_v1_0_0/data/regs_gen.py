@@ -47,7 +47,7 @@ def create_regs_list():
   regsDict=[
 {'reg':"ID",'type':"RO",'endian':"little", 'name':"id",'bits':"31:0",'width':"32",'addr':"32'h0",'default':"32'h0000DAD1"},
 
-{'reg':"Version",'type':"RO",'endian':"little", 'name':"version",'bits':"31:0",'width':"32",'addr':"32'h4",'default':"32'h02211526"},
+{'reg':"Version",'type':"RO",'endian':"little", 'name':"version",'bits':"31:0",'width':"32",'addr':"32'h4",'default':"32'h03071338"},
 
 {'reg':"Reset",'type':"WOE",'endian':"little", 'name':"reset",'bits':"31:0",'width':"32",'addr':"32'h8",'default':"32'h0"},
 

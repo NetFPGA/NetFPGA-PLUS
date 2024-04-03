@@ -128,20 +128,29 @@ module nf_data_sink
      end
   endfunction // log2
 
+  // TKEEP_WIDTH is number of bytes in the data path.
   localparam TKEEP_WIDTH = C_S_AXIS_DATA_WIDTH / 8;
   localparam VALID_COUNT_WIDTH = log2(TKEEP_WIDTH) + 1;
+  localparam BITS_TO_COUNT = TKEEP_WIDTH/4;
 
-  function [6:0] count_bytes_valid_64;
-    input [63:0] valid_vector_64;
+  // To compute packet length we need to sum the number of 1's in tkeep
+  // at the last transfer (tlast == 1). tkeep may be wide (128 bits) and
+  // Vivado struggles to meet timing so I broke this into two clock phases
+  // and compute 4 partial sums in the first phase and then sum the four
+  // partials in the second phase.
+
+  // count number of 1's in a vector
+  function [VALID_COUNT_WIDTH-1:0] count_ones;
+    input [BITS_TO_COUNT-1:0] bit_vec;
     integer i;
     begin
-      count_bytes_valid_64 = 0;
-      for (i = 0 ; i < 64; i = i + 1)
+      count_ones = 0;
+      for (i = 0 ; i < BITS_TO_COUNT; i = i + 1)
       begin
-        count_bytes_valid_64 = count_bytes_valid_64 + valid_vector_64[i];
+        count_ones = count_ones + bit_vec[i];
       end
     end
-  endfunction // count_bytes_valid_64
+  endfunction // count_ones
 
   // XOR all the data into a 32 bit value
   function [7:0] tdata_xor;
@@ -182,8 +191,6 @@ module nf_data_sink
     reg   [`REG_ENABLE_BITS]    ip2cpu_enable_reg;
     wire  [`REG_ENABLE_BITS]    cpu2ip_enable_reg;
     reg   [`REG_AXI_CLK_BITS]   axi_clk_reg;
-    reg   [`REG_TKEEP_LAST_LO_BITS] tkeep_last_lo_reg;
-    reg   [`REG_TKEEP_LAST_HI_BITS] tkeep_last_hi_reg;
 
     reg                         active_reg_axi;
     reg                         enabled;
@@ -201,6 +208,8 @@ module nf_data_sink
   reg [C_M_AXIS_TUSER_WIDTH-1:0]       in_tuser;
   reg  	                               in_tvalid;
   reg                                  in_tlast;
+  reg  	                               in_tvalid2;
+  reg                                  in_tlast2;
 
   // Do something with data to prevent logic erasure.
   reg [7:0]                            in_tdata_xor1;
@@ -220,14 +229,15 @@ module nf_data_sink
   reg [31:0] time_at_last_eop;
   reg [31:0] total_pkt_count;
   reg [15:0] current_pkt_byte_count;
-  reg [((C_S_AXIS_DATA_WIDTH / 8)) - 1:0] tkeep_last;
-  reg [((C_S_AXIS_DATA_WIDTH / 8)) - 1:0] axis_tkeep_last;
 
+  reg [VALID_COUNT_WIDTH-1:0] bytes_valid_quarter[0:3];
 
   reg   [`REG_PKTIN_BITS]     axis_pkt_in_reg;
   reg   [`REG_BYTESINLO_BITS] axis_bytesinlo_reg;
   reg   [`REG_BYTESINHI_BITS] axis_bytesinhi_reg;
   reg   [`REG_TIME_BITS]      axis_time_reg;
+
+  integer i;   // loop counter
 
   // tick counter to extend the duration of the timer without requiring
   // a new 32b reg, at the cost of some precision.
@@ -245,18 +255,17 @@ module nf_data_sink
   wire enabled_axis_sop; 
   wire enabled_axis_mop;
   wire enabled_axis_eop;
-  wire is_active_axis;  // use this, not active_reg
+  wire is_active_axis; 
 
 
-  assign enabled_axis_sop = enabled_axis & in_tvalid & ~in_packet  & s_axis_2_tready;
-  assign enabled_axis_eop = enabled_axis & in_tvalid &  in_tlast   & s_axis_2_tready;
-  assign enabled_axis_mop = enabled_axis & in_tvalid & ~in_tlast   & s_axis_2_tready;
+  assign enabled_axis_sop = enabled_axis & in_tvalid2 & ~in_packet  & s_axis_2_tready;
+  assign enabled_axis_eop = enabled_axis & in_tvalid2 &  in_tlast2  & s_axis_2_tready;
+  assign enabled_axis_mop = enabled_axis & in_tvalid2 & ~in_tlast2  & s_axis_2_tready;
   assign is_active_axis   = enabled_axis_sop | active_reg;
 
   wire [VALID_COUNT_WIDTH-1:0] number_of_last_bytes; // num bytes valid in tlast transaction.
-  assign number_of_last_bytes = in_tlast ? count_bytes_valid_64(in_tkeep[63:0]) + 
-                                           count_bytes_valid_64(in_tkeep[127:64]) 
-                                         : 0;
+  assign number_of_last_bytes = (bytes_valid_quarter[0] + bytes_valid_quarter[1]) +
+                                (bytes_valid_quarter[2] + bytes_valid_quarter[3]);
 
   // ------------ Modules -------------
 
@@ -268,6 +277,9 @@ module nf_data_sink
       in_tuser       <= s_axis_2_tuser;
       in_tvalid      <= s_axis_2_tvalid;
       in_tlast       <= s_axis_2_tlast;
+
+      in_tvalid2     <= in_tvalid;
+      in_tlast2      <= in_tlast;
 
       in_tdata_xor1 <= tdata_xor(in_tdata, in_tkeep);
       in_tdata_xor2 <= in_tdata_xor1;
@@ -324,8 +336,6 @@ module nf_data_sink
     .time_reg          (axis_time_reg),
     .axi_clk_reg       (axi_clk_reg),
     .axis_clk_reg      (axis_clk_reg),
-    .tkeep_last_lo_reg (tkeep_last_lo_reg),
-    .tkeep_last_hi_reg (tkeep_last_hi_reg),
 
     // Global Registers - user can select if to use
     .cpu_resetn_soft(),//software reset, after cpu module
@@ -348,8 +358,6 @@ module nf_data_sink
         sample_reg        <= 1'b0;
         clear_counters    <= 1'b1;
         reset_registers   <= 1'b0;
-        tkeep_last_lo_reg <= 32'd0;
-        tkeep_last_hi_reg <= 32'd0;
 
       end
       else begin
@@ -363,8 +371,6 @@ module nf_data_sink
         sample_reg        <= cpu2ip_enable_reg[1];
         clear_counters    <= reset_reg[0];
         reset_registers   <= reset_reg[4];
-        tkeep_last_lo_reg <= axis_tkeep_last[31:0];  // clock cross
-        tkeep_last_hi_reg <= axis_tkeep_last[63:32]; // clock cross
       end
     // end S_AXI clock domain
     //-------------------------------------------------------------------------------
@@ -393,9 +399,8 @@ module nf_data_sink
         axis_bytesinhi_reg     <= 32'd0;
         axis_time_reg          <= 32'd0;
         tick_ctr               <= `TICK_BITS'd0;
-        tkeep_last             <= 64'd0;
-        axis_tkeep_last        <= 64'd0;
 
+        for (i=0; i<4; i=i+1) bytes_valid_quarter[i] <= 0;
       end
       else begin
 
@@ -407,9 +412,15 @@ module nf_data_sink
         enabled_axis_v         <= {enabled_axis_v[1:0], enabled}; // clock cross
 
         bytesin_count <= enabled_axis_eop & is_active_axis  ? bytesin_count + current_pkt_byte_count + number_of_last_bytes : 
-                        is_active_axis                ? bytesin_count : 64'd0;
+                                            is_active_axis  ? bytesin_count 
+                                                            : 64'd0;
 
         pktin_count   <= enabled_axis ? pktin_count + {31'd0, is_active_axis  & enabled_axis_eop} : 0;
+
+        for (i=0; i<4; i=i+1)
+          bytes_valid_quarter[i] <= in_tlast ? count_ones(in_tkeep[i*BITS_TO_COUNT +: BITS_TO_COUNT])
+                                             : 0;
+
         time_count    <= (is_active_axis | enabled_axis_sop) ? time_count + tick_now : enabled_axis ? time_count : 0;
 
         // do not go active in the middle of a packet - wait until end of current packet.
@@ -418,7 +429,7 @@ module nf_data_sink
 
         time_at_last_eop <= (enabled_axis_eop & is_active_axis) ? time_count :
                             enabled_axis ? time_at_last_eop : 0;
-        total_pkt_count <= total_pkt_count + {31'd0, in_tvalid &  in_tlast & s_axis_2_tready};
+        total_pkt_count <= total_pkt_count + {31'd0, in_tvalid2 &  in_tlast & s_axis_2_tready};
 
         current_pkt_byte_count <= enabled_axis_eop ? 0 :
                                     enabled_axis_mop ? (current_pkt_byte_count + TKEEP_WIDTH) :
@@ -431,8 +442,6 @@ module nf_data_sink
 
         tick_ctr           <= tick_ctr + `TICK_BITS'd1;
 
-        tkeep_last <= (enabled_axis & in_tlast) ? in_tkeep : tkeep_last;
-        axis_tkeep_last <= sample_axis & is_active_axis  ? tkeep_last : axis_tkeep_last;
       end
 
     // end axis_aclk clock domain

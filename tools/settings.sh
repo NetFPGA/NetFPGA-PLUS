@@ -29,10 +29,8 @@ export NF_PROJECT_NAME=reference_dma
 export PYTHON_BNRY=/usr/bin/python3
 
 ### Don't change
-# export VERSION=2020.2     -  GREG - had to change this to latest Vivado version
+
 export VERSION=2023.1
-
-
 export PROJECTS=${NFPLUS_FOLDER}/projects
 export CONTRIB_PROJECTS=${NFPLUS_FOLDER}/contrib-projects
 export NF_DESIGN_DIR=${NFPLUS_FOLDER}/hw/projects/${NF_PROJECT_NAME}
@@ -40,6 +38,7 @@ export NF_WORK_DIR=/tmp/${USER}
 export PYTHONPATH=.:${NFPLUS_FOLDER}/tools/scripts/:${NF_DESIGN_DIR}/lib/Python:${NFPLUS_FOLDER}/tools/scripts/NFTest
 export DRIVER_FOLDER=${NFPLUS_FOLDER}/lib/sw/std/driver/${DRIVER_NAME}
 export APPS_FOLDER=${NFPLUS_FOLDER}/lib/sw/std/apps/${DRIVER_NAME}
+export BOARD_FILE_PATH=${NFPLUS_FOLDER}/hw/lib/xilinx/xilinx_shell_v1_0_0/open-nic-shell/board_files
 
 
 # Check sequence

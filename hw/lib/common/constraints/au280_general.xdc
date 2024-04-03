@@ -67,8 +67,14 @@ set_property PACKAGE_PIN H30 [get_ports QSFP1_RESET]
 set_property IOSTANDARD LVCMOS18 [get_ports QSFP1_RESET]
 
 # HBM
-set_property PACKAGE_PIN D32 [get_ports STAT_CATTRIP]
-set_property IOSTANDARD LVCMOS18 [get_ports STAT_CATTRIP]
+set_property -dict {PACKAGE_PIN D32 IOSTANDARD LVCMOS18 PULLDOWN TRUE} [get_ports hbm_cattrip]
+
+set_property -dict {PACKAGE_PIN D29 IOSTANDARD LVCMOS18} [get_ports satellite_uart_0_txd]
+set_property -dict {PACKAGE_PIN E28 IOSTANDARD LVCMOS18} [get_ports satellite_uart_0_rxd]
+set_property -dict {PACKAGE_PIN K28 IOSTANDARD LVCMOS18} [get_ports satellite_gpio[0]]
+set_property -dict {PACKAGE_PIN J29 IOSTANDARD LVCMOS18} [get_ports satellite_gpio[1]]
+set_property -dict {PACKAGE_PIN K29 IOSTANDARD LVCMOS18} [get_ports satellite_gpio[2]]
+set_property -dict {PACKAGE_PIN J31 IOSTANDARD LVCMOS18} [get_ports satellite_gpio[3]]
 ##########################################################################
 # Timing
 ##########################################################################

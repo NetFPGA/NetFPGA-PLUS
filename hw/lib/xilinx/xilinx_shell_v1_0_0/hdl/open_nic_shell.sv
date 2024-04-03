@@ -19,17 +19,23 @@
 //`define __synthesis__
 `timescale 1ns/1ps
 module open_nic_shell #(
-  parameter int MAX_PKT_LEN   = 1518,
-  parameter int MIN_PKT_LEN   = 64,
-  parameter int USE_PHYS_FUNC = 1,
-  parameter int NUM_PHYS_FUNC = 2,
-  parameter int NUM_QUEUE     = 2048,
-  parameter int NUM_CMAC_PORT = 2
+  parameter [31:0] BUILD_TIMESTAMP = 32'h01010000,
+  parameter int MAX_PKT_LEN        = 1518,
+  parameter int MIN_PKT_LEN        = 64,
+  parameter int NUM_QDMA           = 1,
+  parameter int USE_PHYS_FUNC      = 1,
+  parameter int NUM_PHYS_FUNC      = 2,
+  parameter int NUM_QUEUE          = 2048,
+  parameter int NUM_CMAC_PORT      = 2
 ) (
 `ifndef sim
-`ifdef __au280__
-  output                         hbm_cattrip, // Fix the CATTRIP issue for AU280 custom flow
-`endif
+  output                         hbm_cattrip, 
+  input                    [3:0] satellite_gpio,
+  output                   [1:0] qsfp_resetl,
+  input                    [1:0] qsfp_modprsl,
+  input                    [1:0] qsfp_intl,
+  output                   [1:0] qsfp_lpmode,
+  output                   [1:0] qsfp_modsell,
 
   input                   [15:0] pcie_rxp,
   input                   [15:0] pcie_rxn,
@@ -45,6 +51,9 @@ module open_nic_shell #(
   output   [4*NUM_CMAC_PORT-1:0] qsfp_txn,
   input      [NUM_CMAC_PORT-1:0] qsfp_refclk_p,
   input      [NUM_CMAC_PORT-1:0] qsfp_refclk_n,
+
+  input                          satellite_uart_0_rxd,
+  output                         satellite_uart_0_txd,
 `else // !`ifndef sim
   input                          s_axil_sim_awvalid,
   input                   [31:0] s_axil_sim_awaddr,
@@ -370,7 +379,9 @@ module open_nic_shell #(
   endgenerate
 
   system_config #(
-    .NUM_CMAC_PORT (NUM_CMAC_PORT)
+    .BUILD_TIMESTAMP (BUILD_TIMESTAMP),
+    .NUM_QDMA        (NUM_QDMA),
+    .NUM_CMAC_PORT   (NUM_CMAC_PORT)
   ) system_config_inst (
 `ifndef sim
     .s_axil_awvalid      (axil_pcie_awvalid),
@@ -498,6 +509,41 @@ module open_nic_shell #(
     .user_rstn           (user_rstn),
     .user_rst_done       (user_rst_done),
 
+    .satellite_uart_0_rxd (satellite_uart_0_rxd),
+    .satellite_uart_0_txd (satellite_uart_0_txd),
+    .satellite_gpio_0     (satellite_gpio),
+
+  `ifdef __au280__
+    .hbm_temp_1_0            (7'd0),
+    .hbm_temp_2_0            (7'd0),
+    .interrupt_hbm_cattrip_0 (1'b0),
+  `elsif __au55n__
+    .hbm_temp_1_0            (7'd0),
+    .hbm_temp_2_0            (7'd0),
+    .interrupt_hbm_cattrip_0 (1'b0),
+  `elsif __au55c__
+    .hbm_temp_1_0            (7'd0),
+    .hbm_temp_2_0            (7'd0),
+    .interrupt_hbm_cattrip_0 (1'b0),
+  `elsif __au50__
+    .hbm_temp_1_0            (7'd0),
+    .hbm_temp_2_0            (7'd0),
+    .interrupt_hbm_cattrip_0 (1'b0),
+  `elsif __au200__
+    .qsfp_resetl             (qsfp_resetl),
+    .qsfp_modprsl            (qsfp_modprsl),
+    .qsfp_intl               (qsfp_intl),
+    .qsfp_lpmode             (qsfp_lpmode),
+    .qsfp_modsell            (qsfp_modsell),
+  `elsif __au250__
+    .qsfp_resetl             (qsfp_resetl),
+    .qsfp_modprsl            (qsfp_modprsl),
+    .qsfp_intl               (qsfp_intl),
+    .qsfp_lpmode             (qsfp_lpmode),
+    .qsfp_modsell            (qsfp_modsell),
+  `elsif __au45n__
+
+  `endif
     .aclk                (axil_aclk),
     .aresetn             (powerup_rstn)
   );
@@ -618,7 +664,19 @@ module open_nic_shell #(
     .mod_rstn                             (qdma_rstn),
     .mod_rst_done                         (qdma_rst_done),
 
+    .axil_cfg_aclk                        (axil_aclk),
     .axil_aclk                            (axil_aclk),
+
+  `ifdef __au55n__
+    .ref_clk_100mhz                       (ref_clk_100mhz),
+  `elsif __au55c__
+    .ref_clk_100mhz                       (ref_clk_100mhz),
+  `elsif __au50__
+    .ref_clk_100mhz                       (ref_clk_100mhz),
+  `elsif __au280__
+    .ref_clk_100mhz                       (ref_clk_100mhz),
+  `endif
+    .axis_master_aclk                     (axis_aclk),
     .axis_aclk                            (axis_aclk)
   );
 

@@ -29,6 +29,35 @@ module top_wrapper #(
 	parameter C_TDATA_WIDTH    = 512,
 	parameter C_TUSER_WIDTH    = 128
 )(
+`ifdef __au280__
+	output                         hbm_cattrip,
+	input                    [3:0] satellite_gpio,
+`elsif __au50__
+	output                         hbm_cattrip,
+	input                    [1:0] satellite_gpio,
+`elsif __au55n__
+	output                         hbm_cattrip,
+	input                    [3:0] satellite_gpio,
+`elsif __au55c__
+	output                         hbm_cattrip,
+	input                    [3:0] satellite_gpio,
+`elsif __au200__
+	output                   [1:0] qsfp_resetl,
+	input                    [1:0] qsfp_modprsl,
+	input                    [1:0] qsfp_intl,
+	output                   [1:0] qsfp_lpmode,
+	output                   [1:0] qsfp_modsell,
+	input                    [3:0] satellite_gpio,
+`elsif __au250__
+	output                   [1:0] qsfp_resetl,
+	input                    [1:0] qsfp_modprsl,
+	input                    [1:0] qsfp_intl,
+	output                   [1:0] qsfp_lpmode,
+	output                   [1:0] qsfp_modsell,
+	input                    [3:0] satellite_gpio,
+`elsif __au45n__
+	input                    [1:0] satellite_gpio,
+`endif
 	// QSFP port0
 	input  [3:0]                  qsfp0_rxp,
 	input  [3:0]                  qsfp0_rxn,
@@ -54,6 +83,10 @@ module top_wrapper #(
 	input                         pcie_clk_p,
 	input                         pcie_clk_n,
 	input                         pcie_rst_n,
+
+	// Satellite core
+	input                         satellite_uart_0_rxd,
+	output                        satellite_uart_0_txd,
 
 	output                        m_axil_awvalid,
 	output                 [31:0] m_axil_awaddr,
@@ -399,6 +432,39 @@ module top_wrapper #(
     .qsfp_txn      ({qsfp1_txn, qsfp0_txn}),
     .qsfp_refclk_p ({qsfp1_clk_p, qsfp0_clk_p}),
     .qsfp_refclk_n ({qsfp1_clk_n, qsfp0_clk_n}),
+
+    .satellite_uart_0_rxd(satellite_uart_0_rxd),
+    .satellite_uart_0_txd(satellite_uart_0_txd),
+`ifdef __au280__
+    .hbm_cattrip    (hbm_cattrip   ),
+    .satellite_gpio (satellite_gpio),
+`elsif __au50__
+    .hbm_cattrip    (hbm_cattrip   ),
+    .satellite_gpio (satellite_gpio),
+`elsif __au55n__
+    .hbm_cattrip    (hbm_cattrip   ),
+    .satellite_gpio (satellite_gpio),
+`elsif __au55c__
+    .hbm_cattrip    (hbm_cattrip   ),
+    .satellite_gpio (satellite_gpio),
+`elsif __au200__
+    .qsfp_resetl    (qsfp_resetl   ),
+    .qsfp_modprsl   (qsfp_modprsl  ),
+    .qsfp_intl      (qsfp_intl     ),
+    .qsfp_lpmode    (qsfp_lpmode   ),
+    .qsfp_modsell   (qsfp_modsell  ),
+    .satellite_gpio (satellite_gpio),
+`elsif __au250__
+    .qsfp_resetl    (qsfp_resetl   ),
+    .qsfp_modprsl   (qsfp_modprsl  ),
+    .qsfp_intl      (qsfp_intl     ),
+    .qsfp_lpmode    (qsfp_lpmode   ),
+    .qsfp_modsell   (qsfp_modsell  ),
+    .satellite_gpio (satellite_gpio),
+`elsif __au45n__
+    .satellite_gpio (satellite_gpio),
+`endif
+
 `else // !`ifdef __synthesis__
     .s_axil_awvalid (),
     .s_axil_awaddr  (),

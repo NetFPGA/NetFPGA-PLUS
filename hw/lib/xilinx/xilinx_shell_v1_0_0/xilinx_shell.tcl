@@ -34,6 +34,7 @@ set proj_dir ./ip_proj
 set ip_version 1.0
 set lib_name xilinx
 set proj ./proj
+set_param board.repoPaths $::env(BOARD_FILE_PATH)
 #####################################
 # Project Settings
 #####################################
@@ -42,11 +43,23 @@ set_property BOARD_PART $board [current_project]
 set_property source_mgmt_mode All [current_project]  
 set_property top ${top} [current_fileset]
 set_property ip_repo_paths $::env(NFPLUS_FOLDER)/hw/lib/  [current_fileset]
-set_property verilog_define { {__synthesis__} } [current_fileset]
+if {[string match $board_name "au280"]} {
+	set_property verilog_define { {__synthesis__} {__au280__}} [current_fileset]
+} elseif {[string match $board_name "au250"]} {
+	set_property verilog_define { {__synthesis__} {__au250__}} [current_fileset]
+} elseif {[string match $board_name "au200"]} {
+	set_property verilog_define { {__synthesis__} {__au200__}} [current_fileset]
+} elseif {[string match $board_name "vcu1525"]} {
+	set_property verilog_define { {__synthesis__} {__au200__}} [current_fileset]
+} else {
+	puts "Error: ${board_name} is not found."
+	exit -1
+}
 puts "Creating Xiilnx Xilinx OpenNIC Shell IP"
 #####################################
 # Design Parameters
 #####################################
+set num_qdma      1
 set num_phys_func 2
 set num_queue     2048
 set min_pkt_len   64
@@ -69,6 +82,7 @@ read_verilog -sv "open-nic-shell/src/qdma_subsystem/qdma_subsystem_hash.sv"
 read_verilog     "open-nic-shell/src/qdma_subsystem/qdma_subsystem_qdma_wrapper.v"
 read_verilog -sv "open-nic-shell/src/qdma_subsystem/qdma_subsystem_register.sv"
 read_verilog -sv "open-nic-shell/src/qdma_subsystem/qdma_subsystem.sv"
+read_verilog -sv "open-nic-shell/src/system_config/cms_subsystem.sv"
 read_verilog -sv "open-nic-shell/src/system_config/system_config_address_map.sv"
 read_verilog     "open-nic-shell/src/system_config/system_config_register.v"
 read_verilog -sv "open-nic-shell/src/system_config/system_config.sv"
@@ -127,7 +141,8 @@ generate_target {instantiation_template} [get_files ./${proj}/${axi_crossbar}/${
 generate_target all [get_files ./${proj}/${axi_crossbar}/${axi_crossbar}.xci]
 ipx::package_project -force -import_files ./${proj}/${axi_crossbar}/${axi_crossbar}.xci
 
-source "vivado_ip/qdma_subsystem_axi_cdc.tcl"
+#source "vivado_ip/qdma_subsystem_axi_cdc.tcl"
+source "open-nic-shell/src/qdma_subsystem/vivado_ip/qdma_subsystem_axi_cdc.tcl"
 generate_target {instantiation_template} [get_files ./${proj}/${axi_clock_converter}/${axi_clock_converter}.xci]
 generate_target all [get_files ./${proj}/${axi_clock_converter}/${axi_clock_converter}.xci]
 ipx::package_project -force -import_files ./${proj}/${axi_clock_converter}/${axi_clock_converter}.xci
@@ -137,7 +152,8 @@ generate_target {instantiation_template} [get_files ./${proj}/${axi_crossbar}/${
 generate_target all [get_files ./${proj}/${axi_crossbar}/${axi_crossbar}.xci]
 ipx::package_project -force -import_files ./${proj}/${axi_crossbar}/${axi_crossbar}.xci
 
-source "vivado_ip/qdma_subsystem_clk_div.tcl"
+#source "vivado_ip/qdma_subsystem_clk_div.tcl"
+source "open-nic-shell/src/qdma_subsystem/vivado_ip/qdma_subsystem_clk_div.tcl"
 generate_target {instantiation_template} [get_files ./${proj}/${clk_wiz}/${clk_wiz}.xci]
 generate_target all [get_files ./${proj}/${clk_wiz}/${clk_wiz}.xci]
 ipx::package_project -force -import_files ./${proj}/${clk_wiz}/${clk_wiz}.xci
@@ -165,7 +181,37 @@ generate_target {instantiation_template} [get_files ./${proj}/${axi_crossbar}/${
 generate_target all [get_files ./${proj}/${axi_crossbar}/${axi_crossbar}.xci]
 ipx::package_project -force -import_files ./${proj}/${axi_crossbar}/${axi_crossbar}.xci
 
-update_ip_catalog -rebuild 
+source "open-nic-shell/src/system_config/vivado_ip/system_management_wiz.tcl"
+generate_target {instantiation_template} [get_files ./${proj}/${system_management_wiz}/${system_management_wiz}.xci]
+generate_target all [get_files ./${proj}/${system_management_wiz}/${system_management_wiz}.xci]
+ipx::package_project -force -import_files ./${proj}/${system_management_wiz}/${system_management_wiz}.xci
+
+source "open-nic-shell/src/system_config/vivado_ip/clk_wiz_50Mhz.tcl"
+generate_target {instantiation_template} [get_files ./${proj}/${clk_wiz_50Mhz}/${clk_wiz_50Mhz}.xci]
+generate_target all [get_files ./${proj}/${clk_wiz_50Mhz}/${clk_wiz_50Mhz}.xci]
+ipx::package_project -force -import_files ./${proj}/${clk_wiz_50Mhz}/${clk_wiz_50Mhz}.xci
+
+source "open-nic-shell/src/system_config/vivado_ip/axi_quad_spi_0.tcl"
+generate_target {instantiation_template} [get_files ./${proj}/${axi_quad_spi}/${axi_quad_spi}.xci]
+generate_target all [get_files ./${proj}/${axi_quad_spi}/${axi_quad_spi}.xci]
+ipx::package_project -force -import_files ./${proj}/${axi_quad_spi}/${axi_quad_spi}.xci
+
+source "open-nic-shell/src/system_config/vivado_ip/cms_subsystem_0.tcl"
+generate_target {instantiation_template} [get_files ./${proj}/${cms_subsystem}/${cms_subsystem}.xci]
+generate_target all [get_files ./${proj}/${cms_subsystem}/${cms_subsystem}.xci]
+ipx::package_project -force -import_files ./${proj}/${cms_subsystem}/${cms_subsystem}.xci
+
+source "open-nic-shell/src/system_config/vivado_ip/system_config_axi_clock_converter.tcl"
+generate_target {instantiation_template} [get_files ./${proj}/${axi_clock_converter}/${axi_clock_converter}.xci]
+generate_target all [get_files ./${proj}/${axi_clock_converter}/${axi_clock_converter}.xci]
+ipx::package_project -force -import_files ./${proj}/${axi_clock_converter}/${axi_clock_converter}.xci
+
+source "open-nic-shell/src/utility/vivado_ip/axi_lite_clock_converter.tcl"
+generate_target {instantiation_template} [get_files ./${proj}/${axi_clock_converter}/${axi_clock_converter}.xci]
+generate_target all [get_files ./${proj}/${axi_clock_converter}/${axi_clock_converter}.xci]
+ipx::package_project -force -import_files ./${proj}/${axi_clock_converter}/${axi_clock_converter}.xci
+
+update_ip_catalog -rebuild
 ipx::infer_user_parameters [ipx::current_core]
 
 set_property name ${design} [ipx::current_core]

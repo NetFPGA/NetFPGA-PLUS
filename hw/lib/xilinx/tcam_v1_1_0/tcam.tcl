@@ -33,6 +33,7 @@ set   design         tcam
 set   device         $::env(DEVICE)
 set   proj_dir       ip_proj
 
+set_param board.repoPaths $::env(BOARD_FILE_PATH)
 # Project setting
 create_project -name ${design} -force -dir "./${proj_dir}" -part ${device} -ip
 

@@ -83,8 +83,8 @@ diff -uprN ./onic_main.c ./onic_main.c
  		dev_err(&pdev->dev, "register_netdev, err = %d", rv);
 
 diff -uprN ./onic_netdev.c ./onic_netdev.c
---- onic_netdev.c.orig	2024-04-04 12:36:26.378385542 +0000
-+++ onic_netdev.c	2024-04-04 12:45:12.400189121 +0000
+--- onic_netdev.c.orig	2024-04-04 12:57:18.811283731 +0000
++++ onic_netdev.c	2024-04-04 13:00:43.616203180 +0000
 @@ -25,6 +25,97 @@
 
  #define ONIC_RX_DESC_STEP 256
@@ -182,10 +182,10 @@ diff -uprN ./onic_netdev.c ./onic_netdev.c
 +
  inline static u16 onic_ring_get_real_count(struct onic_ring *ring)
  {
-     /* Valid writeback entry means one less count of descriptor entries */
-@@ -673,6 +764,34 @@ out_of_budget:
-         return NETDEV_TX_OK;
-     }
+ 	/* Valid writeback entry means one less count of descriptor entries */
+@@ -747,6 +838,34 @@ netdev_tx_t onic_xmit_frame(struct sk_bu
+ 	return NETDEV_TX_OK;
+ }
 
 +#ifdef NF_IOCTL
 +static int ioctl_read_reg(struct nfdp_dev *nfdev,
@@ -215,15 +215,13 @@ diff -uprN ./onic_netdev.c ./onic_netdev.c
 +}
 +#endif /*NF_IOCTl*/
 +
-     int onic_set_mac_address(struct net_device *dev, void *addr)
-     {
-         struct sockaddr *saddr = addr;
-@@ -687,11 +806,61 @@ out_of_budget:
-         return 0;
-     }
+ int onic_set_mac_address(struct net_device *dev, void *addr)
+ {
+ 	struct sockaddr *saddr = addr;
+@@ -761,9 +880,59 @@ int onic_set_mac_address(struct net_devi
+ 	return 0;
+ }
 
--    int onic_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
--    {
 +int nf_onic_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
 + {
 +#ifdef NF_IOCTL
@@ -265,11 +263,12 @@ diff -uprN ./onic_netdev.c ./onic_netdev.c
 +		break;
 +	}
 +#endif /*NF_IOCTL*/
-         return 0;
-     }
-
-+int onic_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
-+{
++	return 0;
++}
++
+ int onic_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
+ {
+-	return 0;
 +	return nf_onic_do_ioctl(dev, ifr, cmd);
 +}
 +
@@ -277,12 +276,9 @@ diff -uprN ./onic_netdev.c ./onic_netdev.c
 +		void *data, int cmd)
 +{
 +	return nf_onic_do_ioctl(dev, ifr, cmd);
-+}
-+
-     int onic_change_mtu(struct net_device *dev, int mtu)
-     {
-         netdev_info(dev, "Reqeusted MTU = %d", mtu);
- 
+ }
+
+ int onic_change_mtu(struct net_device *dev, int mtu)
 diff -uprN ./onic_netdev.h ./onic_netdev.h
 --- ./onic_netdev.h	2023-12-07 12:27:36.237535443 +0000
 +++ ./onic_netdev.h	2023-12-07 12:35:34.613759583 +0000

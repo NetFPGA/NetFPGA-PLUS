@@ -83,12 +83,12 @@ diff -uprN ./onic_main.c ./onic_main.c
  		dev_err(&pdev->dev, "register_netdev, err = %d", rv);
 
 diff -uprN ./onic_netdev.c ./onic_netdev.c
---- ./onic_netdev.c	2023-12-07 12:27:48.485237886 +0000
-+++ ./onic_netdev.c	2023-12-07 12:33:03.369510418 +0000
+--- onic_netdev.c.orig	2024-04-04 12:36:26.378385542 +0000
++++ onic_netdev.c	2024-04-04 12:45:12.400189121 +0000
 @@ -25,6 +25,97 @@
- 
+
  #define ONIC_RX_DESC_STEP 256
- 
+
 +#ifdef NF_IOCTL
 +#define NFDP_OFFSET     0x0000
 +#define NFDP_END        0x400000
@@ -182,11 +182,11 @@ diff -uprN ./onic_netdev.c ./onic_netdev.c
 +
  inline static u16 onic_ring_get_real_count(struct onic_ring *ring)
  {
- 	/* Valid writeback entry means one less count of descriptor entries */
-@@ -742,6 +833,34 @@ netdev_tx_t onic_xmit_frame(struct sk_bu
- 	return NETDEV_TX_OK;
- }
- 
+     /* Valid writeback entry means one less count of descriptor entries */
+@@ -673,6 +764,34 @@ out_of_budget:
+         return NETDEV_TX_OK;
+     }
+
 +#ifdef NF_IOCTL
 +static int ioctl_read_reg(struct nfdp_dev *nfdev,
 +				 struct onic_ioctl_ifreq *sifr)
@@ -215,16 +215,17 @@ diff -uprN ./onic_netdev.c ./onic_netdev.c
 +}
 +#endif /*NF_IOCTl*/
 +
- int onic_set_mac_address(struct net_device *dev, void *addr)
- {
- 	struct sockaddr *saddr = addr;
-@@ -756,11 +875,61 @@ int onic_set_mac_address(struct net_devi
- 	return 0;
- }
- 
--int onic_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
+     int onic_set_mac_address(struct net_device *dev, void *addr)
+     {
+         struct sockaddr *saddr = addr;
+@@ -687,11 +806,61 @@ out_of_budget:
+         return 0;
+     }
+
+-    int onic_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
+-    {
 +int nf_onic_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
- {
++ {
 +#ifdef NF_IOCTL
 +	struct onic_private *priv = netdev_priv(dev);
 +	struct nfdp_dev *nfdev = onic_get_nfdp_dev(priv->hw.nfdp_handle);
@@ -264,23 +265,23 @@ diff -uprN ./onic_netdev.c ./onic_netdev.c
 +		break;
 +	}
 +#endif /*NF_IOCTL*/
- 	return 0;
- }
- 
+         return 0;
+     }
+
 +int onic_do_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
 +{
 +	return nf_onic_do_ioctl(dev, ifr, cmd);
 +}
 +
-+int onic_siocdevprivate(struct net_device *dev, struct ifreq *ifr, 
++int onic_siocdevprivate(struct net_device *dev, struct ifreq *ifr,
 +		void *data, int cmd)
 +{
 +	return nf_onic_do_ioctl(dev, ifr, cmd);
 +}
 +
- int onic_change_mtu(struct net_device *dev, int mtu)
- {
- 	netdev_info(dev, "Requested MTU = %d", mtu);
+     int onic_change_mtu(struct net_device *dev, int mtu)
+     {
+         netdev_info(dev, "Reqeusted MTU = %d", mtu);
  
 diff -uprN ./onic_netdev.h ./onic_netdev.h
 --- ./onic_netdev.h	2023-12-07 12:27:36.237535443 +0000

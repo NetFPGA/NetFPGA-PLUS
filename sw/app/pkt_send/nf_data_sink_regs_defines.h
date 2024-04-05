@@ -34,8 +34,6 @@
 // @NETFPGA_LICENSE_HEADER_END@
 //
 
-##########This text should be copied to the head file #############
-   #Registers offset definitions
 
 #define SUME_NF_DATA_SINK_ID_0_OFFSET 0x0
 #define SUME_NF_DATA_SINK_ID_0_DEFAULT 0x0000DAD1

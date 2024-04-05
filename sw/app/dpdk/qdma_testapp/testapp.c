@@ -60,6 +60,7 @@
 #include "commands.h"
 #include "qdma_regs.h"
 #include "testapp.h"
+#include "nfds_lib.h"
 
 int num_ports;
 char *filename;

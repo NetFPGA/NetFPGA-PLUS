@@ -61,6 +61,7 @@
 #include "qdma_regs.h"
 #include "testapp.h"
 #include "nfds_lib.h"
+#include "nf_data_sink_regs_defines.h"
 
 int num_ports;
 char *filename;
@@ -449,9 +450,13 @@ int do_xmit(int port_id, int fd, int queueid, int ld_size, int tot_num_desc,
 	uint64_t prev_tsc, cur_tsc, diff_tsc;
 #endif
 
-	module_id = nfds_get_id(port_id)
-	printf("Module ID reports as 0x%08x. ", module_id);
 
+	module_id = nfds_get_id(port_id);
+    if (module_id != SUME_NF_DATA_SINK_ID_0_DEFAULT) {
+        fprintf(stderr, "ERROR: ID register value does not match expected DATA_SINK value of 0x%0x. Saw 0x%0x.\n",
+                SUME_NF_DATA_SINK_ID_0_DEFAULT, module_id
+        );
+	}
 
 	rte_spinlock_lock(&pinfo[port_id].port_update_lock);
 

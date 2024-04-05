@@ -29,8 +29,8 @@
  * @NETFPGA_LICENSE_HEADER_END@
  *
 */
-#ifndef PKT_SEND_LIB_H
-#define PKT_SEND_LIB_H
+#ifndef NFDS_LIB_H
+#define NFDS_LIB_H
 
 
 // Address space within the card in which nf_data_sink is located. (BAR2)
@@ -51,15 +51,15 @@ typedef struct {
 } ds_sample_t;
 
 uint32_t nfds_get_id(int port_id);
-// int ps_enable_ds(char *ifnam);
-// int ps_disable_ds(char *ifnam);
-// int ps_sample_ds(char *ifnam);
-// int ps_get_sample_ds(char *ifnam, ds_sample_t *sample_data);
-// int ps_compute_freqs_Hz(char *ifnam, float *axi_Hz, float *axis_Hz);
-// int ps_build_raw_packet(char *ifnam, int sockfd, char *sendbuf, struct sockaddr_ll *socket_address, uint32_t num_bytes);
-// int ps_send_pkt_socket(char *ifnam, uint32_t num_bytes, uint32_t num_to_send);
-// int ps_get_tkeep_ds(char *ifnam, uint64_t *tkeep);
-// float ps_compute_performance_bps(float axis_Hz, ds_sample_t *sampled_regs);
+void nfds_enable(int port_id);
+void nfds_disable(int port_id);
+void nfds_sample(int port_id);
+void nfds_get_sample(int port_id, ds_sample_t *sample_data);
+// int nfds_compute_freqs_Hz(char *ifnam, float *axi_Hz, float *axis_Hz);
+// int nfds_build_raw_packet(char *ifnam, int sockfd, char *sendbuf, struct sockaddr_ll *socket_address, uint32_t num_bytes);
+// int nfds_send_pkt_socket(char *ifnam, uint32_t num_bytes, uint32_t num_to_send);
+// int nfds_get_tkeep_ds(char *ifnam, uint64_t *tkeep);
+float nfds_compute_performance_bps(float axis_Hz, ds_sample_t *sampled_regs);
 
 
 #endif

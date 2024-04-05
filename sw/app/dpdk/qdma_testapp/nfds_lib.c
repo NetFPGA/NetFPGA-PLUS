@@ -43,8 +43,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <rte_ethdev.h>
 
-#include "pkt_send_lib.h"
+#include "nfds_lib.h"
 #include "nf_data_sink_regs_defines.h"
 #include "pcierw.h"
 
@@ -65,66 +66,56 @@ uint32_t nfds_get_id(int port_id) {
     return id;
 }
 
-// // Enable DataSink module to start collecting data on packets sent via DMA.
-// int ps_enable_ds(char *ifnam) {
-//     return 
-//     write_register  (ifnam, 
-//                     (uint32_t)(NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_ENABLE_0_OFFSET), 
-//                     (uint32_t) NF_DATA_SINK_ENABLE_ACTIVATE
-//                     );
-// }
+// Enable DataSink module to start collecting data on packets sent via DMA.
+void nfds_enable(int port_id) {
+    PciWrite(NF_DATA_SINK_BAR, 
+            (uint32_t)(NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_ENABLE_0_OFFSET), 
+            (uint32_t) NF_DATA_SINK_ENABLE_ACTIVATE,
+            port_id);
+}
 
-// // Disable DataSink module. Resets all counters
-// int ps_disable_ds(char *ifnam) {
-//     return 
-//     write_register  (ifnam, 
-//                     (uint32_t)(NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_ENABLE_0_OFFSET), 
-//                     (uint32_t) NF_DATA_SINK_ENABLE_DEACTIVATE
-//                     );
-// }
+// Disable DataSink module. Resets all counters
+void nfds_disable(int port_id) {
+    PciWrite(NF_DATA_SINK_BAR, 
+            (uint32_t)(NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_ENABLE_0_OFFSET), 
+            (uint32_t) NF_DATA_SINK_ENABLE_DEACTIVATE,
+            port_id);
+}
 
-// // After packets have been sent, use this to make shadow copies of all registers.
-// // Data capture will continue.
-// int ps_sample_ds(char *ifnam) {
-//     return 
-//     write_register  (ifnam, 
-//                     (uint32_t)(NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_ENABLE_0_OFFSET), 
-//                     (uint32_t) NF_DATA_SINK_ENABLE_SAMPLE | NF_DATA_SINK_ENABLE_ACTIVATE
-//                     );
-// }
+// After packets have been sent, use this to make shadow copies of all registers.
+// Data capture will continue.
+void nfds_sample(int port_id) {
+    PciWrite(NF_DATA_SINK_BAR, 
+            (uint32_t)(NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_ENABLE_0_OFFSET), 
+            (uint32_t) NF_DATA_SINK_ENABLE_SAMPLE | NF_DATA_SINK_ENABLE_ACTIVATE,
+            port_id);
+}
 
-// // After registers have been sampled, read them.
-// int ps_get_sample_ds(char *ifnam, ds_sample_t *sample_data) {
-//     int rc;
-//     uint32_t i32;
-//     rc = read_register  (ifnam, 
-//                         (uint32_t)(NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_PKTIN_0_OFFSET), 
-//                         &i32
-//                         );
-//     sample_data->num_packets = i32;
-//     if (rc == 0) {
-//         rc |= read_register  (ifnam, 
-//                             (uint32_t)(NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_BYTESINLO_0_OFFSET), 
-//                             &i32
-//                             );
-//         sample_data->num_bytes = (uint64_t) i32;
-//     };
-//     if (rc == 0) {
-//         rc = read_register  (ifnam, 
-//                             (uint32_t)(NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_BYTESINHI_0_OFFSET), 
-//                             &i32
-//                             );
-//         sample_data->num_bytes |= ((uint64_t) i32) << 32;
-//     };
-//     if (rc == 0) {
-//         rc = read_register  (ifnam, 
-//                             (uint32_t)(NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_TIME_0_OFFSET), 
-//                             &i32
-//                             );
-//         sample_data->num_ds_periods = i32;
-//     };
-//     return rc;
-// }
+// After registers have been sampled, read them.
+void nfds_get_sample(int port_id, ds_sample_t *sample_data) {
+    uint32_t i32;
+    i32 = PciRead(NF_DATA_SINK_BAR, 
+                (uint32_t)(NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_PKTIN_0_OFFSET), 
+                port_id
+                );
+    sample_data->num_packets = i32;
+    i32 = PciRead  (NF_DATA_SINK_BAR, 
+                    (uint32_t)(NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_BYTESINLO_0_OFFSET), 
+                    port_id
+                );
+    sample_data->num_bytes = (uint64_t) i32;
+    i32 = PciRead  (NF_DATA_SINK_BAR, 
+                    (uint32_t)(NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_BYTESINHI_0_OFFSET), 
+                    port_id 
+                    );
+
+    sample_data->num_bytes |= ((uint64_t) i32) << 32;
+    i32 = PciRead  (NF_DATA_SINK_BAR, 
+                    (uint32_t)(NF_DATA_SINK_BASE_ADDR+SUME_NF_DATA_SINK_TIME_0_OFFSET), 
+                    port_id 
+                    );
+    sample_data->num_ds_periods = i32;
+}
 
 // int ps_get_tkeep_ds(char *ifnam, uint64_t *tkeep) {
 //     int rc;
@@ -261,11 +252,11 @@ uint32_t nfds_get_id(int port_id) {
 //     return 0;
 // }
 
-// // Compute performance in bits per second
-// float ps_compute_performance_bps(float axis_Hz, ds_sample_t *sampled_regs) {
-// 	float time_secs;
-// 	float bits_sent;
-// 	time_secs = sampled_regs->num_ds_periods / axis_Hz;
-// 	bits_sent = (float)(sampled_regs->num_bytes * 8);
-// 	return bits_sent / time_secs;
-// }
+// Compute performance in bits per second
+float nfds_compute_performance_bps(float axis_Hz, ds_sample_t *sampled_regs) {
+	float time_secs;
+	float bits_sent;
+	time_secs = sampled_regs->num_ds_periods / axis_Hz;
+	bits_sent = (float)(sampled_regs->num_bytes * 8);
+	return bits_sent / time_secs;
+}

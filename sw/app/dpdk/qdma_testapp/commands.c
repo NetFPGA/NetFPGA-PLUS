@@ -120,6 +120,7 @@
 #include "commands.h"
 #include "qdma_regs.h"
 #include "testapp.h"
+#include "nfds_lib.h"
 
 #define ALIGN_TO_WORD_BYTES              (4)
 #define NUMERICAL_BASE_HEXADECIMAL       (16)
@@ -615,6 +616,7 @@ static void cmd_obj_dma_to_device_parsed(void *parsed_result,
 	int dst_addr = 0;
 	uint32_t regval = 0;
 	unsigned int q_data_size = 0;
+	ds_sample_t sample_data;
 
 	cmdline_printf(cl, "xmit on Port:%s, filename:%s, num-queues:%s\n\n",
 				res->port_id, res->filename, res->queues);
@@ -688,6 +690,9 @@ static void cmd_obj_dma_to_device_parsed(void *parsed_result,
 			r_size = input_size % num_queues;
 		} else
 			size = input_size / num_queues;
+
+		/* enable the data sink module to gather stats */
+		nfds_enable(port_id);
 
 		do {
 			total_size = input_size;
@@ -772,6 +777,19 @@ static void cmd_obj_dma_to_device_parsed(void *parsed_result,
 			}
 			++loop;
 		} while (loop < num_loops);
+
+		rte_delay_us_sleep(1000000);
+
+		nfds_get_sample(port_id, &sample_data);
+		cmdline_printf(cl,"\nsampled_data: periods=%d   bytes=%0ld   pkts=%d\n",
+				sample_data.num_ds_periods,
+				sample_data.num_bytes,
+				sample_data.num_packets
+		);
+		cmdline_printf(cl,"--- Perf was %9.3f Mbps\n", 
+			nfds_compute_performance_bps(240000000.0, &sample_data)/1000000.0);
+		nfds_disable(port_id);
+
 		close(ifd);
 	}
 	cmdline_printf(cl, "\n######## DMA transfer to device is completed "

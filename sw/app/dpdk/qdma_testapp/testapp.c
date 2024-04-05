@@ -442,10 +442,15 @@ int do_xmit(int port_id, int fd, int queueid, int ld_size, int tot_num_desc,
 	int tmp = 0, user_bar_idx;
 	int qbase = pinfo[port_id].queue_base;
 	uint32_t max_tx_retry;
+	uint32_t module_id;   // the logic module inside the FPGA
 
 #ifdef PERF_BENCHMARK
 	uint64_t prev_tsc, cur_tsc, diff_tsc;
 #endif
+
+	module_id = nfds_get_id(port_id)
+	printf("Module ID reports as 0x%08x. ", module_id);
+
 
 	rte_spinlock_lock(&pinfo[port_id].port_update_lock);
 

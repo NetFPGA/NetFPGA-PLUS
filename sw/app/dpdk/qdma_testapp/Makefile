@@ -43,7 +43,7 @@ BRAM_SIZE ?= 524288
 APP = qdma_testapp
 
 # all source are stored in SRCS-y
-SRCS-y := testapp.c pcierw.c commands.c
+SRCS-y := testapp.c pcierw.c commands.c nfds_lib.c
 
 ifeq ($(CONFIG_RTE_LIBRTE_QDMA_GCOV),y)
   CFLAGS += -g -ftest-coverage -fprofile-arcs

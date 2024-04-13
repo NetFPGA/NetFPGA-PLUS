@@ -507,11 +507,12 @@ int do_xmit(int port_id, int fd, int queueid, int ld_size, int tot_num_desc,
 					&pinfo[port_id].port_update_lock);
 				return -1;
 			}
-#ifndef NO_FILE_READ
+#ifdef NO_FILE_READ
+			ret = pinfo[port_id].buff_size; // fake it.
+#else
 			if (!zbyte)
 				ret = read(fd, rte_pktmbuf_mtod(mb[i], void *),
 						pinfo[port_id].buff_size);
-#endif
 			if (ret < 0) {
 				printf("Error: Could not the read "
 						"input-file\n");
@@ -519,6 +520,7 @@ int do_xmit(int port_id, int fd, int queueid, int ld_size, int tot_num_desc,
 					&pinfo[port_id].port_update_lock);
 				return -1;
 			}
+#endif
 			mb[i]->nb_segs = 1;
 			mb[i]->next = NULL;
 			rte_pktmbuf_data_len(mb[i]) = (uint16_t)ret;
@@ -607,7 +609,11 @@ int do_xmit(int port_id, int fd, int queueid, int ld_size, int tot_num_desc,
 			rte_spinlock_unlock(&pinfo[port_id].port_update_lock);
 			return -1;
 		}
+#ifdef NO_FILE_READ
+		ret = ld_size; // fake it.
+#else
 		ret = read(fd, rte_pktmbuf_mtod(mb[0], void *), ld_size);
+#endif
 		if (ret < 0) {
 			printf("Error: Could not read the input-file\n");
 			rte_spinlock_unlock(&pinfo[port_id].port_update_lock);

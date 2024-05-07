@@ -47,7 +47,7 @@ def create_regs_list():
   regsDict=[
 {'reg':"ID",'type':"RO",'endian':"little", 'name':"id",'bits':"31:0",'width':"32",'addr':"32'h0",'default':"32'h0000DAD1"},
 
-{'reg':"Version",'type':"RO",'endian':"little", 'name':"version",'bits':"31:0",'width':"32",'addr':"32'h4",'default':"32'h03071338"},
+{'reg':"Version",'type':"RO",'endian':"little", 'name':"version",'bits':"31:0",'width':"32",'addr':"32'h4",'default':"32'h03081141"},
 
 {'reg':"Reset",'type':"WOE",'endian':"little", 'name':"reset",'bits':"31:0",'width':"32",'addr':"32'h8",'default':"32'h0"},
 
@@ -68,10 +68,6 @@ def create_regs_list():
 {'reg':"AXI_CLK",'type':"RO",'endian':"little", 'name':"axi_clk",'bits':"31:0",'width':"32",'addr':"32'h28",'default':"32'h0"},
 
 {'reg':"AXIS_CLK",'type':"RO",'endian':"little", 'name':"axis_clk",'bits':"31:0",'width':"32",'addr':"32'h2c",'default':"32'h0"},
-
-{'reg':"tkeep_last_lo",'type':"RO",'endian':"little", 'name':"tkeep_last_lo",'bits':"31:0",'width':"32",'addr':"32'h30",'default':"32'h0"},
-
-{'reg':"tkeep_last_hi",'type':"RO",'endian':"little", 'name':"tkeep_last_hi",'bits':"31:0",'width':"32",'addr':"32'h34",'default':"32'h0"},
 
 ]
   return(regsDict)

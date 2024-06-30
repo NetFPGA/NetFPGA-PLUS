@@ -38,7 +38,6 @@ set project_constraints "${public_repo_dir}/common/constraints/${board_name}_gen
 set start_time [exec date +%s]
 set_param general.maxThreads 8
 set_param synth.elaboration.rodinMoreOptions "rt::set_parameter max_loop_limit 200000"
-set_param board.repoPaths $::env(BOARD_FILE_PATH)
 #####################################
 # Design Parameters on NF_DATAPATH
 #####################################
@@ -53,7 +52,7 @@ set opl_cam_depth_bits    [expr int(log(${opl_bcam_size})/log(2))]
 # But if you really want to see all messages
 # then set suppress_unwanted_warnings to 0.
 #####################################
-set suppress_unwanted_warnings 1
+set suppress_unwanted_warnings 0
 if {$suppress_unwanted_warnings == 1} {
 	set_msg_config -id "Synth 8-11241" -limit 1 
 	set_msg_config -id "Synth 8-6014" -limit 1
@@ -75,7 +74,7 @@ set_property board_part ${board} [current_project]
 set_property source_mgmt_mode DisplayOnly [current_project]
 set_property top ${top} [current_fileset]
 if {[string match $board_name "au280"]} {
-	set_property verilog_define { {BOARD_AU280} {au280} {__au280__} {__synthesis__} } [current_fileset]
+	set_property verilog_define { {BOARD_AU280} {au280} {__synthesis__} } [current_fileset]
 	set board_param "AU280"
 } elseif {[string match $board_name "au250"]} {
 	set_property verilog_define { {BOARD_AU250} {__au250__} {__synthesis__} } [current_fileset]
@@ -84,7 +83,7 @@ if {[string match $board_name "au280"]} {
 	set_property verilog_define { {BOARD_AU200} {__au200__} {__synthesis__} } [current_fileset]
 	set board_param "AU200"
 } elseif {[string match $board_name "vcu1525"]} {
-	set_property verilog_define { {BOARD_VCU1525} {__au200__} {__synthesis__} } [current_fileset]
+	set_property verilog_define { {BOARD_VCU1525}  {__au200__}  {__synthesis__} } [current_fileset]
 	set board_param "VCU1525"
 }
 set_property generic "C_NF_DATA_WIDTH=${datapath_width_bit} BOARD=\"${board_param}\"" [current_fileset]
@@ -122,6 +121,7 @@ set_property constrset constraints [get_runs impl_1]
 # Project 
 #####################################
 update_ip_catalog
+
 # OPL
 create_ip -name switch_output_port_lookup -vendor NetFPGA -library NetFPGA -module_name switch_output_port_lookup_ip
 set_property CONFIG.C_CAM_LUT_DEPTH_BITS ${opl_cam_depth_bits} [get_ips switch_output_port_lookup_ip]
@@ -168,6 +168,14 @@ set_property CONFIG.C_DEFAULT_VALUE_ENABLE 0 [get_ips nf_mac_attachment_dma_ip]
 set_property generate_synth_checkpoint false [get_files nf_mac_attachment_dma_ip.xci]
 reset_target all [get_ips nf_mac_attachment_dma_ip]
 generate_target all [get_ips nf_mac_attachment_dma_ip]
+
+# nf_data_sink
+create_ip -name nf_data_sink -vendor NetFPGA -library NetFPGA -module_name nf_data_sink_ip
+set_property CONFIG.C_M_AXIS_DATA_WIDTH ${datapath_width_bit} [get_ips nf_data_sink_ip]
+set_property CONFIG.C_S_AXIS_DATA_WIDTH ${datapath_width_bit} [get_ips nf_data_sink_ip]
+set_property generate_synth_checkpoint false [get_files nf_data_sink_ip.xci]
+reset_target all [get_ips nf_data_sink_ip]
+generate_target all [get_ips nf_data_sink_ip]
 
 create_ip -name axi_crossbar -vendor xilinx.com -library ip -module_name axi_crossbar_0
 set_property -dict [list \
@@ -493,7 +501,7 @@ read_verilog -sv "${public_repo_dir}/common/hdl/nf_attachment.sv"
 read_verilog     "${public_repo_dir}/common/hdl/top.v"
 
 #Setting Synthesis options
-create_run -flow {Vivado Synthesis 2020} synth
+create_run -flow {Vivado Synthesis 2020} -verbose synth
 set_property write_incremental_synth_checkpoint true [get_runs synth_1]
 set_property AUTO_INCREMENTAL_CHECKPOINT 1 [get_runs synth_1]
 #Setting Implementation options

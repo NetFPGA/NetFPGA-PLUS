@@ -23,31 +23,7 @@
 # @NETFPGA_LICENSE_HEADER_END@
 #
 
-PATCH_FILE := opennic-driver.patch
-OUTFILE    := .updated.txt
-GITOUTFILE := .git_updated
-DRIVER_DIR := open-nic-driver
-
-all: fetch patch driver
-
-.PHONY: fetch patch driver
-patch: $(OUTFILE)
-$(OUTFILE):
-	patch -d $(DRIVER_DIR) < $(PATCH_FILE) > $(OUTFILE)
-
-fetch: $(GITOUTFILE)
-$(GITOUTFILE):
-	touch $(GITOUTFILE)
-	git submodule update --init $(DRIVER_DIR)
-
-driver:
-	cd $(DRIVER_DIR) && $(MAKE)
-
-clean:
-	$(MAKE) -C $(DRIVER_DIR) clean
-
-install:
-	$(MAKE) -C $(DRIVER_DIR) install
-
-uninstall:
-	$(MAKE) -C $(DRIVER_DIR) uninstall
+create_pblock pblock_nf_datapath
+add_cells_to_pblock [get_pblocks pblock_nf_datapath] [get_cells -quiet [list nf_datapath_0]]
+add_cells_to_pblock [get_pblocks pblock_nf_datapath] [get_cells -quiet [list u_top_wrapper/u_nf_attachment]]
+resize_pblock [get_pblocks pblock_nf_datapath] -add {SLR2}

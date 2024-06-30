@@ -28,7 +28,7 @@
 
 module top #(
 	parameter SIMULATIOM                   = "FALSE",
-	parameter BOARD                        = "AU280",
+	parameter BOARD                        = "AU250", // Greg: was "AU280"
 	parameter C_NF_DATA_WIDTH              = 512 ,
 	parameter C_NF_TUSER_WIDTH             = 128,
 	parameter C_IF_DATA_WIDTH              = 512,
@@ -183,6 +183,10 @@ module top #(
     end
   end
 
+  // Moved instantiation here to remove synth warning
+  wire core_clk;
+  wire locked;
+
   reg [9:0] core_rst_cnt = 10'd0;
   reg core_rst_reg;
   always @ (posedge core_clk) begin
@@ -198,9 +202,6 @@ module top #(
 
   wire axis_aclk, axil_aclk_250m;
   wire axis_rst, axil_rst_250m;
-
-  wire core_clk;
-  wire locked;
 
   clk_wiz_1 u_clk_wiz_1 (
     .clk_out1(core_clk),

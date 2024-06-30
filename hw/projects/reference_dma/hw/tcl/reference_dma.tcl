@@ -52,7 +52,7 @@ set opl_cam_depth_bits    [expr int(log(${opl_bcam_size})/log(2))]
 # But if you really want to see all messages
 # then set suppress_unwanted_warnings to 0.
 #####################################
-set suppress_unwanted_warnings 1
+set suppress_unwanted_warnings 0
 if {$suppress_unwanted_warnings == 1} {
 	set_msg_config -id "Synth 8-11241" -limit 1 
 	set_msg_config -id "Synth 8-6014" -limit 1
@@ -121,13 +121,7 @@ set_property constrset constraints [get_runs impl_1]
 # Project 
 #####################################
 update_ip_catalog
-# nf_data_sink
-create_ip -name nf_data_sink -vendor NetFPGA -library NetFPGA -module_name nf_data_sink_ip
-set_property CONFIG.C_M_AXIS_DATA_WIDTH ${datapath_width_bit} [get_ips nf_data_sink_ip]
-set_property CONFIG.C_S_AXIS_DATA_WIDTH ${datapath_width_bit} [get_ips nf_data_sink_ip]
-set_property generate_synth_checkpoint false [get_files nf_data_sink_ip.xci]
-reset_target all [get_ips nf_data_sink_ip]
-generate_target all [get_ips nf_data_sink_ip]
+
 # OPL
 create_ip -name switch_output_port_lookup -vendor NetFPGA -library NetFPGA -module_name switch_output_port_lookup_ip
 set_property CONFIG.C_CAM_LUT_DEPTH_BITS ${opl_cam_depth_bits} [get_ips switch_output_port_lookup_ip]
@@ -174,6 +168,14 @@ set_property CONFIG.C_DEFAULT_VALUE_ENABLE 0 [get_ips nf_mac_attachment_dma_ip]
 set_property generate_synth_checkpoint false [get_files nf_mac_attachment_dma_ip.xci]
 reset_target all [get_ips nf_mac_attachment_dma_ip]
 generate_target all [get_ips nf_mac_attachment_dma_ip]
+
+# nf_data_sink
+create_ip -name nf_data_sink -vendor NetFPGA -library NetFPGA -module_name nf_data_sink_ip
+set_property CONFIG.C_M_AXIS_DATA_WIDTH ${datapath_width_bit} [get_ips nf_data_sink_ip]
+set_property CONFIG.C_S_AXIS_DATA_WIDTH ${datapath_width_bit} [get_ips nf_data_sink_ip]
+set_property generate_synth_checkpoint false [get_files nf_data_sink_ip.xci]
+reset_target all [get_ips nf_data_sink_ip]
+generate_target all [get_ips nf_data_sink_ip]
 
 create_ip -name axi_crossbar -vendor xilinx.com -library ip -module_name axi_crossbar_0
 set_property -dict [list \
@@ -499,7 +501,7 @@ read_verilog -sv "${public_repo_dir}/common/hdl/nf_attachment.sv"
 read_verilog     "${public_repo_dir}/common/hdl/top.v"
 
 #Setting Synthesis options
-create_run -flow {Vivado Synthesis 2020} synth
+create_run -flow {Vivado Synthesis 2020} -verbose synth
 set_property write_incremental_synth_checkpoint true [get_runs synth_1]
 set_property AUTO_INCREMENTAL_CHECKPOINT 1 [get_runs synth_1]
 #Setting Implementation options

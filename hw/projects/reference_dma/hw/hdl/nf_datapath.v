@@ -174,10 +174,12 @@ module nf_datapath #(
     assign m_axis_0_tkeep = 0;
     assign m_axis_0_tuser = 0;
     assign m_axis_0_tlast = 1'b0;
+    assign m_axis_0_tvalid = 1'b0;
     assign m_axis_1_tdata = 0;
     assign m_axis_1_tkeep = 0;
     assign m_axis_1_tuser = 0;
     assign m_axis_1_tlast = 1'b0;
+    assign m_axis_1_tvalid = 1'b0;
 
     // not using S1_AXI or S2_AXI register interfaces at the moment.
     assign S1_AXI_ARREADY = 1'b0;
@@ -202,6 +204,7 @@ module nf_datapath #(
     assign m_axis_2_tkeep = 0;
     assign m_axis_2_tuser = 0;
     assign m_axis_2_tlast = 1'b0;
+    assign m_axis_2_tvalid = 1'b0;
 
   // Data sink (data from DMA)
     nf_data_sink 

@@ -42,8 +42,8 @@
  * 		
  *  Description:
  *        Barrier control module. Aggregates barrier good notifications
- * 	  from individual modules and pushes out a global barrier good notification
- * 	  when all modules are ready.
+ * 	    from individual modules and pushes out a global barrier good notification
+ * 	    when all modules are ready.
  *
  *
  */
@@ -71,9 +71,9 @@ reg timeout;
 wire [NUM_PORTS:0] activity;
 wire activity_trans;
 
-assign activity = {activity_stim[2] || activity_rec[2],activity_stim[1] || activity_rec[1],activity_stim[0] || activity_rec[0]};
-
-assign activity_trans = {activity_trans_sim || activity_trans_log};
+// assign activity = {activity_stim[2] || activity_rec[2],activity_stim[1] || activity_rec[1],activity_stim[0] || activity_rec[0]};
+assign activity = activity_stim | activity_rec;
+assign activity_trans = {activity_trans_sim | activity_trans_log};
 
 initial
 begin

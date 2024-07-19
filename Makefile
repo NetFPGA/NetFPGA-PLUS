@@ -82,6 +82,7 @@ cores:
 	make -C $(LIB_HW_DIR)/contrib/nf_endianess_manager_v1_0_0/
 	make -C $(LIB_HW_DIR)/std/axis_fifo_v1_0_0/
 	make -C $(LIB_HW_DIR)/std/nf_axis_converter_v1_0_0/
+	make -C $(LIB_HW_DIR)/std/nf_data_sink_v1_0_0/
 	make -C $(LIB_HW_DIR)/std/nf_mac_attachment_v1_0_0/
 	make -C $(LIB_HW_DIR)/std/input_arbiter_v1_0_0/
 	make -C $(LIB_HW_DIR)/std/output_queues_v1_0_0/

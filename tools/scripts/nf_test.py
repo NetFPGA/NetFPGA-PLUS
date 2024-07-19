@@ -215,108 +215,108 @@ def run_hw_test():
             print('')
 
 def run_sim_test():
-	verifyCI()
-	#set up test dirs
-	passed = []; failed = []; gui = []
-	for td in tests:
-		if args.tx:
-			if args.gui:
-				if args.packet_length and args.packet_no:
-					charis = os.system("make simtxgui TESTNAME=sim_tx_dma PKTLEN=%d PKTNO=%d -C %s" % (length, number, designDIr + '/test/'))
-				elif args.packet_length: 
-					charis = os.system("make simtxgui TESTNAME=sim_tx_dma PKTLEN=%d -C %s" % (length, designDIr + '/test/'))
-				elif args.packet_no:
-					charis = os.system("make simtxgui TESTNAME=sim_tx_dma PKTNO=%d -C %s" % (number, designDIr + '/test/'))
-				else:
-					charis = os.system("make simtxgui TESTNAME=sim_tx_dma -C %s" % (designDIr + '/test/'))
-			else:
-				if args.packet_length and args.packet_no:
-					charis = os.system("make simtx TESTNAME=sim_tx_dma PKTLEN=%d PKTNO=%d -C %s" % (length, number, designDIr + '/test/'))
-				elif args.packet_length: 
-					charis = os.system("make simtx TESTNAME=sim_tx_dma PKTLEN=%d -C %s" % (length, designDIr + '/test/'))
-				elif args.packet_no:
-					charis = os.system("make simtx TESTNAME=sim_tx_dma PKTNO=%d -C %s" % (number, designDIr + '/test/'))
-				else:
-					charis = os.system("make simtx TESTNAME=sim_tx_dma -C %s" % (designDIr + '/test/'))
-		elif args.rx:
-			if args.gui:
-				if args.packet_length and args.packet_no:
-					charis = os.system("make simrxgui TESTNAME=sim_rx_dma PKTLEN=%d PKTNO=%d -C %s" % (length, number, designDIr + '/test/'))
-				elif args.packet_length: 
-					charis = os.system("make simrxgui TESTNAME=sim_rx_dma PKTLEN=%d -C %s" % (length, designDIr + '/test/'))
-				elif args.packet_no:
-					charis = os.system("make simrxgui TESTNAME=sim_rx_dma PKTNO=%d -C %s" % (number, designDIr + '/test/'))
-				else:
-					charis = os.system("make simrxgui TESTNAME=sim_rx_dma -C %s" % (designDIr + '/test/'))
-			else:
-				if args.packet_length and args.packet_no:
-					charis = os.system("make simrx TESTNAME=sim_rx_dma PKTLEN=%d PKTNO=%d -C %s" % (length, number, designDIr + '/test/'))
-				elif args.packet_length: 
-					charis = os.system("make simrx TESTNAME=sim_rx_dma PKTLEN=%d -C %s" % (length, designDIr + '/test/'))
-				elif args.packet_no:
-					charis = os.system("make simrx TESTNAME=sim_rx_dma PKTNO=%d -C %s" % (number, designDIr + '/test/'))
-				else:
-					charis = os.system("make simrx TESTNAME=sim_rx_dma -C %s" % (designDIr + '/test/'))
-		elif args.txrx:
-			if args.gui:
-				if args.packet_length and args.packet_no:
-					charis = os.system("make simtxrxgui TESTNAME=sim_txrx_dma PKTLEN=%d PKTNO=%d -C %s" % (length, number, designDIr + '/test/'))
-				elif args.packet_length: 
-					charis = os.system("make simtxrxgui TESTNAME=sim_txrx_dma PKTLEN=%d -C %s" % (length, designDIr + '/test/'))
-				elif args.packet_no:
-					charis = os.system("make simtxrxgui TESTNAME=sim_txrx_dma PKTNO=%d -C %s" % (number, designDIr + '/test/'))
-				else:
-					charis = os.system("make simtxrxgui TESTNAME=sim_txrx_dma -C %s" % (designDIr + '/test/'))
-			else:
-				if args.packet_length and args.packet_no:
-					charis = os.system("make simtxrx TESTNAME=sim_txrx_dma PKTLEN=%d PKTNO=%d -C %s" % (length, number, designDIr + '/test/'))
-				elif args.packet_length: 
-					charis = os.system("make simtxrx TESTNAME=sim_txrx_dma PKTLEN=%d -C %s" % (length, designDIr + '/test/'))
-				elif args.packet_no:
-					charis = os.system("make simtxrx TESTNAME=sim_txrx_dma PKTNO=%d -C %s" % (number, designDIr + '/test/'))
-				else:
-					charis = os.system("make simtxrx TESTNAME=sim_txrx_dma -C %s" % (designDIr + '/test/'))
-		elif args.gui:
-			charis = os.system("make simgui TESTNAME=%s -C %s" % (td, designDIr + '/test/'))
-		else:
-			charis = os.system("make sim TESTNAME=%s -C %s" % (td, designDIr + '/test/'))
-		print(charis)
-	
-		if args.type == 'sim':
-			subprocess.call(['cp', '-r', '-p', designDIr + '/hw/Makefile', src_test_dir])
+    verifyCI()
+    #set up test dirs
+    passed = []; failed = []; gui = []
+    for td in tests:
+        if args.tx:
+            if args.gui:
+                if args.packet_length and args.packet_no:
+                    charis = os.system("make simtxgui TESTNAME=sim_tx_dma PKTLEN=%d PKTNO=%d -C %s" % (length, number, designDIr + '/test/'))
+                elif args.packet_length: 
+                    charis = os.system("make simtxgui TESTNAME=sim_tx_dma PKTLEN=%d -C %s" % (length, designDIr + '/test/'))
+                elif args.packet_no:
+                    charis = os.system("make simtxgui TESTNAME=sim_tx_dma PKTNO=%d -C %s" % (number, designDIr + '/test/'))
+                else:
+                    charis = os.system("make simtxgui TESTNAME=sim_tx_dma -C %s" % (designDIr + '/test/'))
+            else:
+                if args.packet_length and args.packet_no:
+                    charis = os.system("make simtx TESTNAME=sim_tx_dma PKTLEN=%d PKTNO=%d -C %s" % (length, number, designDIr + '/test/'))
+                elif args.packet_length: 
+                    charis = os.system("make simtx TESTNAME=sim_tx_dma PKTLEN=%d -C %s" % (length, designDIr + '/test/'))
+                elif args.packet_no:
+                    charis = os.system("make simtx TESTNAME=sim_tx_dma PKTNO=%d -C %s" % (number, designDIr + '/test/'))
+                else:
+                    charis = os.system("make simtx TESTNAME=sim_tx_dma -C %s" % (designDIr + '/test/'))
+        elif args.rx:
+            if args.gui:
+                if args.packet_length and args.packet_no:
+                    charis = os.system("make simrxgui TESTNAME=sim_rx_dma PKTLEN=%d PKTNO=%d -C %s" % (length, number, designDIr + '/test/'))
+                elif args.packet_length: 
+                    charis = os.system("make simrxgui TESTNAME=sim_rx_dma PKTLEN=%d -C %s" % (length, designDIr + '/test/'))
+                elif args.packet_no:
+                    charis = os.system("make simrxgui TESTNAME=sim_rx_dma PKTNO=%d -C %s" % (number, designDIr + '/test/'))
+                else:
+                    charis = os.system("make simrxgui TESTNAME=sim_rx_dma -C %s" % (designDIr + '/test/'))
+            else:
+                if args.packet_length and args.packet_no:
+                    charis = os.system("make simrx TESTNAME=sim_rx_dma PKTLEN=%d PKTNO=%d -C %s" % (length, number, designDIr + '/test/'))
+                elif args.packet_length: 
+                    charis = os.system("make simrx TESTNAME=sim_rx_dma PKTLEN=%d -C %s" % (length, designDIr + '/test/'))
+                elif args.packet_no:
+                    charis = os.system("make simrx TESTNAME=sim_rx_dma PKTNO=%d -C %s" % (number, designDIr + '/test/'))
+                else:
+                    charis = os.system("make simrx TESTNAME=sim_rx_dma -C %s" % (designDIr + '/test/'))
+        elif args.txrx:
+            if args.gui:
+                if args.packet_length and args.packet_no:
+                    charis = os.system("make simtxrxgui TESTNAME=sim_txrx_dma PKTLEN=%d PKTNO=%d -C %s" % (length, number, designDIr + '/test/'))
+                elif args.packet_length: 
+                    charis = os.system("make simtxrxgui TESTNAME=sim_txrx_dma PKTLEN=%d -C %s" % (length, designDIr + '/test/'))
+                elif args.packet_no:
+                    charis = os.system("make simtxrxgui TESTNAME=sim_txrx_dma PKTNO=%d -C %s" % (number, designDIr + '/test/'))
+                else:
+                    charis = os.system("make simtxrxgui TESTNAME=sim_txrx_dma -C %s" % (designDIr + '/test/'))
+            else:
+                if args.packet_length and args.packet_no:
+                    charis = os.system("make simtxrx TESTNAME=sim_txrx_dma PKTLEN=%d PKTNO=%d -C %s" % (length, number, designDIr + '/test/'))
+                elif args.packet_length: 
+                    charis = os.system("make simtxrx TESTNAME=sim_txrx_dma PKTLEN=%d -C %s" % (length, designDIr + '/test/'))
+                elif args.packet_no:
+                    charis = os.system("make simtxrx TESTNAME=sim_txrx_dma PKTNO=%d -C %s" % (number, designDIr + '/test/'))
+                else:
+                    charis = os.system("make simtxrx TESTNAME=sim_txrx_dma -C %s" % (designDIr + '/test/'))
+        elif args.gui:
+            charis = os.system("make simgui TESTNAME=%s -C %s" % (td, designDIr + '/test/'))
+        else:
+            charis = os.system("make sim TESTNAME=%s -C %s" % (td, designDIr + '/test/'))
+        print(charis)
+    
+        if args.type == 'sim':
+            subprocess.call(['cp', '-r', '-p', designDIr + '/hw/Makefile', src_test_dir])
 
-		if not args.no_compile:
-			buildSim()
-		if args.compile_only:
-			sys.exit(0)
-		prepareTestWorkDir(td)
-		global_run = designDIr + '/test/' + td + '/run.py'
-		dst_dir = proj_test_dir + '/' + td
-		which_run = global_run
-		cmd = [which_run, '--sim']
-		os.chdir(dst_dir)
-		if args.isim:
-			cmd.append('isim')
-		elif args.vcs:
-			cmd.append('vcs')
-		elif args.vsim:
-			cmd.append('vsim')
-		else:
-			cmd.append('xsim')
-		if args.dump:
-			cmd.append('--dump')
-		if args.gui:
-			cmd.append('--gui')
-		if args.ci:
-			cmd.append('--ci')
-			cmd.append(args.ci)
-			cmd.append('--citest')
-			cmd.append(args.citest)
+        if not args.no_compile:
+            buildSim()
+        if args.compile_only:
+            sys.exit(0)
+        prepareTestWorkDir(td)
+        global_run = designDIr + '/test/' + td + '/run.py'
+        dst_dir = proj_test_dir + '/' + td
+        which_run = global_run
+        cmd = [which_run, '--sim']
+        os.chdir(dst_dir)
+        if args.isim:
+            cmd.append('isim')
+        elif args.vcs:
+            cmd.append('vcs')
+        elif args.vsim:
+            cmd.append('vsim')
+        else:
+            cmd.append('xsim')
+        if args.dump:
+            cmd.append('--dump')
+        if args.gui:
+            cmd.append('--gui')
+        if args.ci:
+            cmd.append('--ci')
+            cmd.append(args.ci)
+            cmd.append('--citest')
+            cmd.append(args.citest)
 
-		#run tests
-		print('=== Running test ' + dst_dir + ' ...', end = " ")
-		print('using cmd', cmd) 
-	
+        #run tests
+        print('=== Running test ' + dst_dir + ' ...', end = " ")
+        print('using cmd', cmd) 
+    
 def handleArgs():
     parser = argparse.ArgumentParser()
     parser.add_argument('type', choices=['hw','sim'], help='Type of test to run: hw or sw')
@@ -360,32 +360,35 @@ def handleArgs():
             print('Error: --make_opt, --sim_opt, --dump, --vcs, --vsim --isim, and --gui are only compatible with simulation tests')
             sys.exit(1)
 
-def printEnv():
-	print("NetFPGA environment:")
-	print("   Root dir:       " + rootDir)
-	print("   Project name:   " + project)
-	print("   Project dir:    " + projDir)
-	print("   Work dir:       " + workDir)
+def printEnv(dir_only = False):
+    print("NetFPGA environment:")
+    print("   Root dir:       " + rootDir)
+    print("   Project name:   " + project)
+    print("   Project dir:    " + projDir)
+    print("   Work dir:       " + workDir)
+    
+    if dir_only:
+        return
 
-	if args.type == 'sim':
-		subprocess.call(['cp', '-r', '-p', designDIr + '/hw/Makefile', src_test_dir])
-		os.system("make reg -C %s" % (designDIr + '/test/'))
-	else:
-		os.system("make reg -C %s" % (designDIr + '/hw/'))
+    if args.type == 'sim':
+        subprocess.call(['cp', '-r', '-p', designDIr + '/hw/Makefile', src_test_dir])
+        os.system("make reg -C %s" % (designDIr + '/test/'))
+    else:
+        os.system("make reg -C %s" % (designDIr + '/hw/'))
 
 # verify that NF_ROOT has been set and exists
 def identifyRoot():
-	global rootDir; global projDir; global designDIr
-	try:
-		rootDir = os.path.abspath(os.environ['NFPLUS_FOLDER'])
-		designDIr = os.path.abspath(os.environ['NF_DESIGN_DIR'])
-		projDir = designDIr
+    global rootDir; global projDir; global designDIr
+    try:
+        rootDir = os.path.abspath(os.environ['NFPLUS_FOLDER'])
+        designDIr = os.path.abspath(os.environ['NF_DESIGN_DIR'])
+        projDir = designDIr
 
-		if not os.path.exists(rootDir):
-			print("NetFPGA directory " + rootDir + " as referenced by environment variable 'NFPLUS_FOLDER' does not exist")
-	except(KeyError):
-		print("Please set the environment variable 'NFPLUS_FOLDER' to point to the local NetFPGA source")
-	os.environ['NFPLUS_FOLDER'] = rootDir
+        if not os.path.exists(rootDir):
+            print("NetFPGA directory " + rootDir + " as referenced by environment variable 'NFPLUS_FOLDER' does not exist")
+    except(KeyError):
+        print("Please set the environment variable 'NFPLUS_FOLDER' to point to the local NetFPGA source")
+    os.environ['NFPLUS_FOLDER'] = rootDir
 
 def identifyWorkDir():
     global workDir
@@ -394,7 +397,7 @@ def identifyWorkDir():
     except(KeyError):
         login = os.getlogin()
         workDir = '/tmp/' + login
-	
+    
     if not os.path.exists(workDir):
         try:
             os.mkdir(workDir)
@@ -421,36 +424,36 @@ def identifyWorkDir():
         src_test_dir = os.environ['NF_DESIGN_DIR'] + '/test'
 
 def identifyTests():
-	test_name = ''; both_test_name = ''
-	global length
-	global number
-	if args.major:
-		both_test_name = 'both_' + args.major + '_' + args.minor
-		if args.type == 'sim':
-			test_name = 'sim_' + args.major + '_' + args.minor
-		else:
-			test_name = 'hw_' + args.major + '_' + args.minor
-	else:
-		both_test_name = 'both_'
-		if args.type == 'sim':
-			test_name = 'sim_'
-		else:
-			test_name = 'hw_'
+    test_name = ''; both_test_name = ''
+    global length
+    global number
+    if args.major:
+        both_test_name = 'both_' + args.major + '_' + args.minor
+        if args.type == 'sim':
+            test_name = 'sim_' + args.major + '_' + args.minor
+        else:
+            test_name = 'hw_' + args.major + '_' + args.minor
+    else:
+        both_test_name = 'both_'
+        if args.type == 'sim':
+            test_name = 'sim_'
+        else:
+            test_name = 'hw_'
 
-	if args.packet_length:
-		length = args.packet_length
+    if args.packet_length:
+        length = args.packet_length
 
-	if args.packet_no:
-		number = args.packet_no
+    if args.packet_no:
+        number = args.packet_no
 
-	dirs = os.listdir(os.environ['NF_DESIGN_DIR'] + '/test')
-	global tests;tests = []
-	for test in dirs:
-		if test.endswith(test_name) or test.endswith(both_test_name):
-			tests.append(test)
-	if len(tests) == 0:
-		print('=== Error: No tests match ' + test_name + ' - exiting')
-		sys.exit(0)
+    dirs = os.listdir(os.environ['NF_DESIGN_DIR'] + '/test')
+    global tests;tests = []
+    for test in dirs:
+        if test.endswith(test_name) or test.endswith(both_test_name):
+            tests.append(test)
+    if len(tests) == 0:
+        print('=== Error: No tests match ' + test_name + ' - exiting')
+        sys.exit(0)
 
 def prepareWorkDir():
     global project; global projDir
@@ -471,33 +474,33 @@ def prepareWorkDir():
     subprocess.call(['cp', '-r', '-p', src_test_dir + '/connections', projDir])
 
 def prepareTestWorkDir(testName):
-	dst_dir = proj_test_dir + '/' + testName
-	src_dir = src_test_dir + '/' + testName
-	# look for a test
-	if args.type == 'sim':
-		print('=== Setting up test in ' + dst_dir)
-	# check if exists, make if doesn't, error if fail
-	if not os.path.exists(dst_dir):
-		try:
-			os.mkdir(dst_dir)
-		except OSError as exc:
-			print('Error: Unable to create test directory ' + dst_dir)
-			print(exc.strerror, exc.filename)
-			sys.exit(1)
-	# cp files to dst_dir
-	if args.type == 'sim':
-		for file in glob.glob(src_dir + '/*'):
-			subprocess.call(['cp', '-r', '-p', file, dst_dir])
-		for i in range(2):
-			subprocess.call(['cp', '-r', '-p', src_test_dir + '/nf_interface_%d_log.axi' %i, dst_dir])
-			subprocess.call(['cp', '-r', '-p', src_test_dir + '/nf_interface_%d_stim.axi' %i, dst_dir])
-			subprocess.call(['cp', '-r', '-p', src_test_dir + '/nf_interface_%d_expected.axi' %i, dst_dir])
-		subprocess.call(['cp', '-r', '-p', src_test_dir + '/dma_0_log.axi', dst_dir])
-		subprocess.call(['cp', '-r', '-p', src_test_dir + '/dma_0_expected.axi', dst_dir])
-		subprocess.call(['cp', '-r', '-p', src_test_dir + '/Makefile', dst_dir])
-		subprocess.call(['cp', '-r', '-p', src_test_dir + '/reg_stim.log', dst_dir])
-		subprocess.call(['cp', '-r', '-p', src_test_dir + '/reg_expect.axi', dst_dir])
-		subprocess.call(['cp', '-r', '-p', src_test_dir + '/reg_stim.axi', dst_dir])
+    dst_dir = proj_test_dir + '/' + testName
+    src_dir = src_test_dir + '/' + testName
+    # look for a test
+    if args.type == 'sim':
+        print('=== Setting up test in ' + dst_dir)
+    # check if exists, make if doesn't, error if fail
+    if not os.path.exists(dst_dir):
+        try:
+            os.mkdir(dst_dir)
+        except OSError as exc:
+            print('Error: Unable to create test directory ' + dst_dir)
+            print(exc.strerror, exc.filename)
+            sys.exit(1)
+    # cp files to dst_dir
+    if args.type == 'sim':
+        for file in glob.glob(src_dir + '/*'):
+            subprocess.call(['cp', '-r', '-p', file, dst_dir])
+        for i in range(2):
+            subprocess.call(['cp', '-r', '-p', src_test_dir + '/nf_interface_%d_log.axi' %i, dst_dir])
+            subprocess.call(['cp', '-r', '-p', src_test_dir + '/nf_interface_%d_stim.axi' %i, dst_dir])
+            subprocess.call(['cp', '-r', '-p', src_test_dir + '/nf_interface_%d_expected.axi' %i, dst_dir])
+        subprocess.call(['cp', '-r', '-p', src_test_dir + '/dma_0_log.axi', dst_dir])
+        subprocess.call(['cp', '-r', '-p', src_test_dir + '/dma_0_expected.axi', dst_dir])
+        subprocess.call(['cp', '-r', '-p', src_test_dir + '/Makefile', dst_dir])
+        subprocess.call(['cp', '-r', '-p', src_test_dir + '/reg_stim.log', dst_dir])
+        subprocess.call(['cp', '-r', '-p', src_test_dir + '/reg_expect.axi', dst_dir])
+        subprocess.call(['cp', '-r', '-p', src_test_dir + '/reg_stim.axi', dst_dir])
 
 def buildSim():
     project = os.path.basename(os.path.abspath(os.environ['NF_DESIGN_DIR']))
@@ -637,6 +640,7 @@ if args.type == 'sim':
 else:
     run_hw_test()
 
+printEnv(dir_only=True)
 
 
 

@@ -506,7 +506,7 @@ always @(posedge axis_aclk)
 
 		// -- pkt_sent_from_cpu counter
 		pkt_sent_from_cpu_cntr_reg[`REG_PKT_SENT_FROM_CPU_CNTR_WIDTH - 2 : 0]	<=	(clear_counters | pkt_sent_from_cpu_cntr_reg_clear) ? 'h0 : pkt_sent_from_cpu_cntr_reg[`REG_PKT_SENT_FROM_CPU_CNTR_WIDTH - 2 : 0] + pkt_sent_from_cpu;
-		pkt_sent_from_cpu_cntr_reg[`REG_PKT_SENT_FROM_CPU_CNTR_WIDTH - 1 : 0]	<=	(clear_counters | pkt_sent_from_cpu_cntr_reg_clear) ? 1'b1 : pkt_sent_from_cpu & (pkt_sent_from_cpu_cntr_reg[`REG_PKT_SENT_FROM_CPU_CNTR_WIDTH - 2 : 0] + 1'b1 > {(`REG_PKT_SENT_FROM_CPU_CNTR_WIDTH-1){1'b1}}) ? 1'b1 : pkt_sent_from_cpu_cntr_reg[`REG_PKT_SENT_FROM_CPU_CNTR_WIDTH - 1];
+		pkt_sent_from_cpu_cntr_reg[`REG_PKT_SENT_FROM_CPU_CNTR_WIDTH - 1]		<=	(clear_counters | pkt_sent_from_cpu_cntr_reg_clear) ? 1'b0 : pkt_sent_from_cpu & (pkt_sent_from_cpu_cntr_reg[`REG_PKT_SENT_FROM_CPU_CNTR_WIDTH - 2 : 0] + 1'b1 > {(`REG_PKT_SENT_FROM_CPU_CNTR_WIDTH-1){1'b1}}) ? 1'b1 : pkt_sent_from_cpu_cntr_reg[`REG_PKT_SENT_FROM_CPU_CNTR_WIDTH - 1];
 
 
 		// -- pkt_sent_to_cpu_options_ver counter

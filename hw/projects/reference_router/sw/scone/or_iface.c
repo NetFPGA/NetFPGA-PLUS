@@ -465,12 +465,12 @@ void read_hw_iface_mac(router_state *rs, unsigned int port, unsigned int *mac_hi
 			break;
 
 		case 2:
-			readReg(rs->netfpga_regs, NFPLUS_OUTPUT_PORT_LOOKUP_0_MAC_1_HI, mac_hi);
-			readReg(rs->netfpga_regs, NFPLUS_OUTPUT_PORT_LOOKUP_0_MAC_1_LOW, mac_lo);
+			readReg(rs->netfpga_regs, NFPLUS_OUTPUT_PORT_LOOKUP_0_MAC_2_HI, mac_hi);
+			readReg(rs->netfpga_regs, NFPLUS_OUTPUT_PORT_LOOKUP_0_MAC_2_LOW, mac_lo);
 			break;
 		case 3:
-			readReg(rs->netfpga_regs, NFPLUS_OUTPUT_PORT_LOOKUP_0_MAC_1_HI, mac_hi);
-			readReg(rs->netfpga_regs, NFPLUS_OUTPUT_PORT_LOOKUP_0_MAC_1_LOW, mac_lo);
+			readReg(rs->netfpga_regs, NFPLUS_OUTPUT_PORT_LOOKUP_0_MAC_3_HI, mac_hi);
+			readReg(rs->netfpga_regs, NFPLUS_OUTPUT_PORT_LOOKUP_0_MAC_3_LOW, mac_lo);
 			break;
 		default:
 			printf("Unknwon port, Failed to read the hardware registers\n");
